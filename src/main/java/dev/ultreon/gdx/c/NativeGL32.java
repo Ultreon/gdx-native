@@ -1,6 +1,7 @@
 package dev.ultreon.gdx.c;
 
 import com.badlogic.gdx.graphics.GL32;
+import dev.ultreon.gdx.c.opengl.OpenGL;
 import org.teavm.interop.Address;
 
 import java.nio.*;
@@ -44,31 +45,31 @@ public class NativeGL32 implements GL32 {
             buffer.get(data);
             return Address.ofData(data);
         }
-        
+
         public static Address of(LongBuffer buffer) {
             long[] data = new long[buffer.remaining()];
             buffer.get(data);
             return Address.ofData(data);
         }
-        
+
         public static Address of(FloatBuffer buffer) {
             float[] data = new float[buffer.remaining()];
             buffer.get(data);
             return Address.ofData(data);
         }
-        
+
         public static Address of(DoubleBuffer buffer) {
             double[] data = new double[buffer.remaining()];
             buffer.get(data);
             return Address.ofData(data);
         }
-        
+
         public static Address of(CharBuffer buffer) {
             char[] data = new char[buffer.remaining()];
             buffer.get(data);
             return Address.ofData(data);
         }
-        
+
         public static void put(Buffer buffer, Address address) {
             if (buffer instanceof ByteBuffer) {
                 put((ByteBuffer) buffer, address);
@@ -87,82 +88,82 @@ public class NativeGL32 implements GL32 {
             } else {
                 throw new UnsupportedOperationException("Unsupported buffer type: " + buffer.getClass().getName());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(ByteBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getByte());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(ShortBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getShort());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(IntBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
-            
+
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getInt());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(LongBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
-            
+
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getLong());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(FloatBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
-            
+
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getFloat());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(DoubleBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
-            
+
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getDouble());
             }
-            
+
             buffer.rewind();
         }
-        
+
         public static void put(CharBuffer buffer, Address address) {
             int size = buffer.capacity();
             buffer.rewind();
-            
+
             for (int a = 0; a < size; a++) {
                 buffer.put(address.getChar());
             }
-            
+
             buffer.rewind();
         }
     }
@@ -203,17 +204,17 @@ public class NativeGL32 implements GL32 {
         Address address4 = AddressUtils.of(severities);
         Address address5 = AddressUtils.of(lengths);
         Address address6 = AddressUtils.of(messageLog);
-        
+
         int result = OpenGL.glGetDebugMessageLog(count, address, address2, address3, address4, address5, address6);
-        
+
         sources.rewind();
         types.rewind();
         ids.rewind();
         severities.rewind();
         lengths.rewind();
         messageLog.rewind();
-        
-        return result;          
+
+        return result;
     }
 
     @Override
@@ -351,6 +352,7 @@ public class NativeGL32 implements GL32 {
         params.rewind();
         AddressUtils.put(params, address);
     }
+
     @Override
     public void glMinSampleShading(float value) {
         OpenGL.glMinSampleShading(value);
@@ -424,6 +426,7 @@ public class NativeGL32 implements GL32 {
         params.rewind();
         AddressUtils.put(params, address);
     }
+
     @Override
     public void glTexBuffer(int target, int internalformat, int buffer) {
         OpenGL.glTexBuffer(target, internalformat, buffer);
@@ -479,6 +482,7 @@ public class NativeGL32 implements GL32 {
         params.rewind();
         AddressUtils.put(params, address);
     }
+
     @Override
     public int glGetProgramResourceIndex(int program, int programInterface, String name) {
         return OpenGL.glGetProgramResourceIndex(program, programInterface, name);
@@ -504,6 +508,7 @@ public class NativeGL32 implements GL32 {
         AddressUtils.put(length, lengthAddress);
         AddressUtils.put(params, paramsAddress);
     }
+
     @Override
     public int glGetProgramResourceLocation(int program, int programInterface, String name) {
         return OpenGL.glGetProgramResourceLocation(program, programInterface, name);
@@ -542,6 +547,7 @@ public class NativeGL32 implements GL32 {
         OpenGL.glGenProgramPipelines(n, address);
         AddressUtils.put(pipelines, address);
     }
+
     @Override
     public boolean glIsProgramPipeline(int pipeline) {
         return OpenGL.glIsProgramPipeline(pipeline);
@@ -761,6 +767,7 @@ public class NativeGL32 implements GL32 {
         OpenGL.glProgramUniformMatrix4x3fv(program, location, transpose, address);
         AddressUtils.put(value, address);
     }
+
     @Override
     public void glValidateProgramPipeline(int pipeline) {
         OpenGL.glValidateProgramPipeline(pipeline);
@@ -1214,6 +1221,7 @@ public class NativeGL32 implements GL32 {
         AddressUtils.put(uniformIndices, indicesAddress);
         AddressUtils.put(params, paramsAddress);
     }
+
     @Override
     public int glGetUniformBlockIndex(int program, String uniformBlockName) {
         return OpenGL.glGetUniformBlockIndex(program, uniformBlockName);
@@ -1947,6 +1955,7 @@ public class NativeGL32 implements GL32 {
         params.rewind();
         AddressUtils.put(params, address);
     }
+
     @Override
     public String glGetShaderInfoLog(int shader) {
         return OpenGL.glGetShaderInfoLog(shader);
