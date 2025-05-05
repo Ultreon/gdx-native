@@ -81,8 +81,6 @@ teavm {
 
     c {
         shortFileNames = false
-        heapDump = false
-        optimization = OptimizationLevel.NONE
     }
 }
 
