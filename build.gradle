@@ -61,7 +61,7 @@ model {
 
 // Rest of your configuration remains the same...
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation platform('org.junit:junit-bom:5.12.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation "org.teavm:teavm-interop:0.12.0"
