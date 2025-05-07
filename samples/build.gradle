@@ -1,0 +1,94 @@
+plugins {
+    id 'java'
+    id 'cpp'
+    id 'c'
+    id "org.teavm" version "0.12.0"
+}
+
+group = 'dev.ultreon.gdx.c'
+version = 'unspecified'
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    implementation project(":backend")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register("run") {
+    doLast {
+        def osName = System.getProperty('os.name').toLowerCase()
+        def isWindows = osName.contains('windows')
+
+        exec {
+            workingDir 'build/generated/teavm/c'
+            if (isWindows) {
+                commandLine './program.exe'
+            } else {
+                commandLine './program'
+            }
+        }
+    }
+}
+
+tasks.withType(CCompile).configureEach {
+    dependsOn "generateC"
+}
+tasks.withType(LinkExecutable).configureEach {
+    dependsOn "generateC"
+}
+
+def generatedCSources = file("build/generated/teavm/c")
+def executableFile = file("build/dist/gdx-c.exe")
+
+tasks.register("buildNativeLinux", Exec) {
+    group = "build"
+    dependsOn(tasks.buildC)
+    inputs.dir(generatedCSources)
+    inputs.file(rootProject.file("CMakeLists.txt"))
+    outputs.file(executableFile)
+    executable = "./build-linux.sh"
+    workingDir = projectDir
+}
+
+tasks.register("buildNativeWindows", Exec) {
+    group = "build"
+    dependsOn(tasks.buildC)
+    commandLine = ["cmd", "/c", "build-windows.bat"]
+    workingDir = projectDir
+}
+
+rootProject.ext.mainClassName = 'dev.ultreon.gdx.c.samples.NativeBuilder'
+
+tasks.register('buildC', JavaExec) {
+    dependsOn classes
+    setDescription("Transpile bytecode to C via TeaVM")
+    mainClass.set(rootProject.mainClassName)
+    setClasspath(sourceSets.main.runtimeClasspath)
+
+    doFirst {
+        def sourceJarPaths = configurations.compileClasspath
+                .resolvedConfiguration
+                .resolvedArtifacts
+                .collect { artifact ->
+                    try {
+                        def id = artifact.moduleVersion.id
+                        def dep = "${id.group}:${id.name}:${id.version}:sources"
+                        def conf = configurations.detachedConfiguration(dependencies.create(dep))
+                        conf.transitive = false
+                        def file = conf.resolve().find { it.exists() }
+                        return file?.absolutePath
+                    } catch (Exception ignored) {
+                        return null
+                    }
+                }
+                .findAll { it != null }
+
+        environment 'SOURCE_JARS', sourceJarPaths.join(File.pathSeparator)
+    }
+}
+build.dependsOn buildC

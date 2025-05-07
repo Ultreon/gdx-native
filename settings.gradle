@@ -1,1 +1,3 @@
 rootProject.name = 'gdx-c'
+include 'backend'
+include 'samples'
