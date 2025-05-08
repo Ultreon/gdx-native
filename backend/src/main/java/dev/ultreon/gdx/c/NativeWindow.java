@@ -32,7 +32,7 @@ import java.util.Map;
 import static dev.ultreon.gdx.c.glfw.GLFW.*;
 
 public class NativeWindow implements Disposable {
-    private static final Map<Address, NativeWindow> windows = new HashMap<>();
+    private static final Map<Long, NativeWindow> windows = new HashMap<>();
     private long windowHandle;
     final ApplicationListener listener;
     private final Array<LifecycleListener> lifecycleListeners;
@@ -50,11 +50,12 @@ public class NativeWindow implements Disposable {
     boolean focused = false;
     boolean asyncResized = false;
     private boolean requestRendering = false;
+    private boolean visible = false;
 
     public static NativeWindow byAddress(Address windowHandle) {
-        return windows.get(windowHandle);
+        return windows.get(windowHandle.toLong());
     }
-    
+
     private final GLFWWindowFocusCallback focusCallback = Function.get(GLFWWindowFocusCallback.class, NativeWindow.class, "focusCallback")/* = new GLFWWindowFocusCallback() {
         @Override
         public void invoke(Address windowHandle, final boolean focused) {
@@ -93,35 +94,39 @@ public class NativeWindow implements Disposable {
     }*/;
 
     public static void focusCallback(Address windowHandle, boolean focused) {
-        NativeWindow window = windows.get(windowHandle);
-        window.postRunnable(() -> {
-            if (focused) {
-                if (window.config.pauseWhenLostFocus) {
-                    synchronized (window.lifecycleListeners) {
-                        for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
-                            lifecycleListener.resume();
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            window.postRunnable(() -> {
+                if (focused) {
+                    if (window.config.pauseWhenLostFocus) {
+                        synchronized (window.lifecycleListeners) {
+                            for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
+                                lifecycleListener.resume();
+                            }
                         }
+                        window.listener.resume();
                     }
-                    window.listener.resume();
-                }
-                if (window.windowListener != null) {
-                    window.windowListener.focusGained();
-                }
-            } else {
-                if (window.windowListener != null) {
-                    window.windowListener.focusLost();
-                }
-                if (window.config.pauseWhenLostFocus) {
-                    synchronized (window.lifecycleListeners) {
-                        for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
-                            lifecycleListener.pause();
+                    if (window.windowListener != null) {
+                        window.windowListener.focusGained();
+                    }
+                } else {
+                    if (window.windowListener != null) {
+                        window.windowListener.focusLost();
+                    }
+                    if (window.config.pauseWhenLostFocus) {
+                        synchronized (window.lifecycleListeners) {
+                            for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
+                                lifecycleListener.pause();
+                            }
                         }
+                        window.listener.pause();
                     }
-                    window.listener.pause();
                 }
-            }
-            window.focused = focused;
-        });
+                window.focused = focused;
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in focusCallback", t);
+        }
     }
 
     private final GLFWWindowIconifyCallback iconifyCallback = Function.get(GLFWWindowIconifyCallback.class, NativeWindow.class, "iconifyCallback");
@@ -135,71 +140,91 @@ public class NativeWindow implements Disposable {
     private final GLFWWindowRefreshCallback refreshCallback = Function.get(GLFWWindowRefreshCallback.class, NativeWindow.class, "refreshCallback");
 
     public static void iconifyCallback(Address windowHandle, boolean iconified) {
-        NativeWindow window = windows.get(windowHandle);
-        window.postRunnable(() -> {
-            if (window.windowListener != null) {
-                window.windowListener.iconified(iconified);
-            }
-            window.iconified = iconified;
-            if (iconified) {
-                if (window.config.pauseWhenMinimized) {
-                    synchronized (window.lifecycleListeners) {
-                        for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
-                            lifecycleListener.pause();
-                        }
-                    }
-                    window.listener.pause();
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            window.postRunnable(() -> {
+                if (window.windowListener != null) {
+                    window.windowListener.iconified(iconified);
                 }
-            } else {
-                if (window.config.pauseWhenMinimized) {
-                    synchronized (window.lifecycleListeners) {
-                        for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
-                            lifecycleListener.resume();
+                window.iconified = iconified;
+                if (iconified) {
+                    if (window.config.pauseWhenMinimized) {
+                        synchronized (window.lifecycleListeners) {
+                            for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
+                                lifecycleListener.pause();
+                            }
                         }
+                        window.listener.pause();
                     }
-                    window.listener.resume();
+                } else {
+                    if (window.config.pauseWhenMinimized) {
+                        synchronized (window.lifecycleListeners) {
+                            for (LifecycleListener lifecycleListener : window.lifecycleListeners) {
+                                lifecycleListener.resume();
+                            }
+                        }
+                        window.listener.resume();
+                    }
                 }
-            }
-        });
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in iconifyCallback", t);
+        }
     }
 
     public static void maximizeCallback(Address windowHandle, boolean maximized) {
-        NativeWindow window = windows.get(windowHandle);
-        window.postRunnable(() -> {
-            if (window.windowListener != null) {
-                window.windowListener.maximized(maximized);
-            }
-        });
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            window.postRunnable(() -> {
+                if (window.windowListener != null) {
+                    window.windowListener.maximized(maximized);
+                }
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in maximizeCallback", t);
+        }
     }
 
     public static void closeCallback(Address windowHandle) {
-        NativeWindow window = windows.get(windowHandle);
-        window.postRunnable(() -> {
-            if (window.windowListener != null) {
-                if (!window.windowListener.closeRequested()) {
-                    setWindowShouldClose(windowHandle.toLong(), false);
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            window.postRunnable(() -> {
+                if (window.windowListener != null) {
+                    if (!window.windowListener.closeRequested()) {
+                        setWindowShouldClose(windowHandle.toLong(), false);
+                    }
                 }
-            }
-        });
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in closeCallback", t);
+        }
     }
 
     public static void dropCallback(Address windowHandle, int count, long names) {
-        NativeWindow window = windows.get(windowHandle);
-        final String[] files = GLFWDropCallback.names(count, names);
-        window.postRunnable(() -> {
-            if (window.windowListener != null) {
-                window.windowListener.filesDropped(files);
-            }
-        });
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            final String[] files = dropNames(count, names);
+            window.postRunnable(() -> {
+                if (window.windowListener != null) {
+                    window.windowListener.filesDropped(files);
+                }
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in dropCallback", t);
+        }
     }
 
     public static void refreshCallback(Address windowHandle) {
-        NativeWindow window = windows.get(windowHandle);
-        window.postRunnable(() -> {
-            if (window.windowListener != null) {
-                window.windowListener.refreshRequested();
-            }
-        });
+        try {
+            NativeWindow window = windows.get(windowHandle.toLong());
+            window.postRunnable(() -> {
+                if (window.windowListener != null) {
+                    window.windowListener.refreshRequested();
+                }
+            });
+        } catch (Throwable t) {
+            Gdx.app.error("NativeWindow", "Error in refreshCallback", t);
+        }
     }
     NativeWindow(ApplicationListener listener, Array<LifecycleListener> lifecycleListeners, NativeApplicationConfiguration config,
                  NativeApplicationBase application) {
@@ -216,6 +241,8 @@ public class NativeWindow implements Disposable {
         this.windowHandle = windowHandle;
         this.input = application.createInput(this);
         this.graphics = new NativeGraphics(this);
+
+        windows.put(windowHandle, this);
 
         setWindowFocusCallback(windowHandle, focusCallback);
         setWindowIconifyCallback(windowHandle, iconifyCallback);
@@ -288,11 +315,13 @@ public class NativeWindow implements Disposable {
      * Sets the visibility of the window. Invisible windows will still call their {@link ApplicationListener}
      */
     public void setVisible(boolean visible) {
-        if (visible) {
-            showWindow(windowHandle);
-        } else {
-            hideWindow(windowHandle);
+        application.error("Gdx", "Experimental: setVisible is not yet implemented properly. Please report any bugs you find with it.");
+        if (visible && !this.visible) {
+            setWindowAttrib(windowHandle, GLFW.GLFW_VISIBLE, GLFW_TRUE);
+        } else if (!visible && this.visible) {
+            setWindowAttrib(windowHandle, GLFW.GLFW_VISIBLE, GLFW_FALSE);
         }
+        this.visible = visible;
     }
 
     /**

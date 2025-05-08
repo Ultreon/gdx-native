@@ -1,8 +1,8 @@
 package dev.ultreon.gdx.c.glfw;
 
+import com.badlogic.gdx.Gdx;
 import dev.ultreon.gdx.c.Callback;
 import dev.ultreon.gdx.c.GLFWImage;
-import dev.ultreon.gdx.c.Memory;
 import dev.ultreon.gdx.c.NativeCallbacks;
 import org.teavm.interop.*;
 import org.teavm.interop.c.Include;
@@ -381,7 +381,7 @@ public class GLFW {
         glfwSetWindowFocusCallback(Address.fromLong(window), focusCallback);
     }
 
-    @Import(name = "setWindowFocusCallback")
+    @Import(name = "glfwSetWindowFocusCallback")
     private static native void glfwSetWindowFocusCallback(Address window, GLFWWindowFocusCallback focusCallback);
 
     public static void setWindowMaximizeCallback(long window, GLFWWindowMaximizeCallback maximizeCallback) {
@@ -391,7 +391,7 @@ public class GLFW {
         glfwSetWindowMaximizeCallback(Address.fromLong(window), maximizeCallback);
     }
 
-    @Import(name = "setWindowMaximizeCallback")
+    @Import(name = "glfwSetWindowMaximizeCallback")
     private static native void glfwSetWindowMaximizeCallback(Address window, GLFWWindowMaximizeCallback maximizeCallback);
 
     public static void setWindowCloseCallback(long window, GLFWWindowCloseCallback maximizeCallback) {
@@ -408,7 +408,7 @@ public class GLFW {
         glfwSetDropCallback(Address.fromLong(window), dropCallback);
     }
 
-    @Import(name = "setWindowCloseCallback")
+    @Import(name = "glfwSetWindowCloseCallback")
     private static native void glfwSetWindowCloseCallback(Address window, GLFWWindowCloseCallback maximizeCallback);
 
     public static void setWindowIconifyCallback(long window, GLFWWindowIconifyCallback maximizeCallback) {
@@ -418,7 +418,7 @@ public class GLFW {
         glfwSetWindowIconifyCallback(Address.fromLong(window), maximizeCallback);
     }
 
-    @Import(name = "setWindowIconifyCallback")
+    @Import(name = "glfwSetWindowIconifyCallback")
     private static native void glfwSetWindowIconifyCallback(Address window, GLFWWindowIconifyCallback maximizeCallback);
 
     public static void setWindowRefreshCallback(long window, GLFWWindowRefreshCallback maximizeCallback) {
@@ -736,11 +736,8 @@ public class GLFW {
     }
 
     public static void setDebugCallback(Callback o) {
-        glfwSetDebugCallback(o);
+        Gdx.app.error("GLFW", "Setting debug callback is not supported!");
     }
-
-    @Import(name = "glfwSetDebugCallback")
-    private static native void glfwSetDebugCallback(Callback o);
 
     public static void maximizeWindow(long window) {
         glfwMaximizeWindow(Address.fromLong(window));
@@ -846,6 +843,18 @@ public class GLFW {
     @Import(name = "glfwRequestWindowAttention")
     private static native void glfwRequestWindowAttention(Address address);
 
+    public static String[] dropNames(int count, long names) {
+        String[] strings = new String[count];
+        Address address = Address.fromLong(names);
+        for (int i = 0; i < count; i++) {
+            Address strAddress = address.getAddress();
+            address = address.add(Address.sizeOf());
+            strings[i] = Strings.fromC(strAddress);
+        }
+
+        return strings;
+    }
+
     public static abstract class GLFWErrorCallback extends Function {
         public static GLFWErrorCallback createPrint() {
             return Function.get(GLFWErrorCallback.class, NativeCallbacks.class, "onError");
@@ -915,18 +924,6 @@ public class GLFW {
     }
 
     public static abstract class GLFWDropCallback extends Function {
-
-        public static String[] names(int count, long names) {
-            String[] strings = new String[count];
-            Address address = Address.fromLong(names);
-            for (int i = 0; i < count; i++) {
-                Address strAddress = address.getAddress();
-                address = address.add(Address.sizeOf());
-                strings[i] = Strings.fromC(strAddress);
-            }
-
-            return strings;
-        }
 
         public abstract void invoke(Address window, int count, long names);
     }

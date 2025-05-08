@@ -3,10 +3,15 @@ package dev.ultreon.gdx.c;
 import com.badlogic.gdx.graphics.GL32;
 import dev.ultreon.gdx.c.opengl.OpenGL;
 import org.teavm.interop.Address;
+import org.teavm.interop.Strings;
 
 import java.nio.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NativeGL32 implements GL32 {
+    private final Map<Integer, Long> managedShaderSources = new HashMap<>();
+
     public static class AddressUtils {
         public static Address of(Buffer buffer) {
             if (buffer instanceof ByteBuffer) {
@@ -1056,26 +1061,22 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteVertexArrays(int n, int[] arrays, int offset) {
-        OpenGL.glDeleteVertexArrays(n, Address.ofData(arrays), offset);
+        OpenGL.glDeleteVertexArrays(n, IntBuffer.wrap(arrays, offset, n));
     }
 
     @Override
     public void glDeleteVertexArrays(int n, IntBuffer arrays) {
-        Address address = AddressUtils.of(arrays);
-        OpenGL.glDeleteVertexArrays(n, address, 0);
-        AddressUtils.put(arrays, address);
+        OpenGL.glDeleteVertexArrays(n, arrays);
     }
 
     @Override
     public void glGenVertexArrays(int n, int[] arrays, int offset) {
-        OpenGL.glGenVertexArrays(n, Address.ofData(arrays), offset);
+        OpenGL.glGenVertexArrays(n, IntBuffer.wrap(arrays, offset, n));
     }
 
     @Override
     public void glGenVertexArrays(int n, IntBuffer arrays) {
-        Address address = AddressUtils.of(arrays);
-        OpenGL.glGenVertexArrays(n, address, 0);
-        AddressUtils.put(arrays, address);
+        OpenGL.glGenVertexArrays(n, arrays);
     }
 
     @Override
@@ -1318,9 +1319,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glSamplerParameteriv(int sampler, int pname, IntBuffer param) {
-        Address address = AddressUtils.of(param);
-        OpenGL.glSamplerParameteriv(sampler, pname, address);
-        AddressUtils.put(param, address);
+        OpenGL.glSamplerParameteriv(sampler, pname, param);
     }
 
     @Override
@@ -1330,23 +1329,17 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glSamplerParameterfv(int sampler, int pname, FloatBuffer param) {
-        Address address = AddressUtils.of(param);
-        OpenGL.glSamplerParameterfv(sampler, pname, address);
-        AddressUtils.put(param, address);
+        OpenGL.glSamplerParameterfv(sampler, pname, param);
     }
 
     @Override
     public void glGetSamplerParameteriv(int sampler, int pname, IntBuffer params) {
-        Address address = AddressUtils.of(params);
-        OpenGL.glGetSamplerParameteriv(sampler, pname, address);
-        AddressUtils.put(params, address);
+        OpenGL.glGetSamplerParameteriv(sampler, pname, params);
     }
 
     @Override
     public void glGetSamplerParameterfv(int sampler, int pname, FloatBuffer params) {
-        Address address = AddressUtils.of(params);
-        OpenGL.glGetSamplerParameterfv(sampler, pname, address);
-        AddressUtils.put(params, address);
+        OpenGL.glGetSamplerParameterfv(sampler, pname, params);
     }
 
     @Override
@@ -1361,26 +1354,22 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteTransformFeedbacks(int n, int[] ids, int offset) {
-        OpenGL.glDeleteTransformFeedbacks(n, Address.ofData(ids), offset);
+        OpenGL.glDeleteTransformFeedbacks(n, IntBuffer.wrap(ids, offset, n));
     }
 
     @Override
     public void glDeleteTransformFeedbacks(int n, IntBuffer ids) {
-        Address address = AddressUtils.of(ids);
-        OpenGL.glDeleteTransformFeedbacks(n, address, 0);
-        AddressUtils.put(ids, address);
+        OpenGL.glDeleteTransformFeedbacks(n, ids);
     }
 
     @Override
     public void glGenTransformFeedbacks(int n, int[] ids, int offset) {
-        OpenGL.glGenTransformFeedbacks(n, Address.ofData(ids), offset);
+        OpenGL.glGenTransformFeedbacks(n, IntBuffer.wrap(ids, offset, n));
     }
 
     @Override
     public void glGenTransformFeedbacks(int n, IntBuffer ids) {
-        Address address = AddressUtils.of(ids);
-        OpenGL.glGenTransformFeedbacks(n, address, 0);
-        AddressUtils.put(ids, address);
+        OpenGL.glGenTransformFeedbacks(n, ids);
     }
 
     @Override
@@ -1405,16 +1394,12 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glInvalidateFramebuffer(int target, int numAttachments, IntBuffer attachments) {
-        Address address = AddressUtils.of(attachments);
-        OpenGL.glInvalidateFramebuffer(target, numAttachments, address);
-        AddressUtils.put(attachments, address);
+        OpenGL.glInvalidateFramebuffer(target, numAttachments, attachments);
     }
 
     @Override
     public void glInvalidateSubFramebuffer(int target, int numAttachments, IntBuffer attachments, int x, int y, int width, int height) {
-        Address address = AddressUtils.of(attachments);
-        OpenGL.glInvalidateSubFramebuffer(target, numAttachments, address, x, y, width, height);
-        AddressUtils.put(attachments, address);
+        OpenGL.glInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height);
     }
 
     @Override
@@ -1459,16 +1444,12 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, Buffer data) {
-        Address address = AddressUtils.of(data);
-        OpenGL.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, address);
-        AddressUtils.put(data, address);
+        OpenGL.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
     }
 
     @Override
     public void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, Buffer data) {
-        Address address = AddressUtils.of(data);
-        OpenGL.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, address);
-        AddressUtils.put(data, address);
+        OpenGL.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
     }
 
     @Override
@@ -1488,14 +1469,14 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteTextures(int n, IntBuffer textures) {
-        Address address = AddressUtils.of(textures);
-        OpenGL.glDeleteTextures(n, address);
-        AddressUtils.put(textures, address);
+        OpenGL.glDeleteTextures(n, textures);
     }
 
     @Override
     public void glDeleteTexture(int texture) {
-        OpenGL.glDeleteTexture(texture);
+        IntBuffer textures = IntBuffer.allocate(1);
+        textures.put(texture);
+        OpenGL.glDeleteTextures(1, textures);
     }
 
     @Override
@@ -1525,9 +1506,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDrawElements(int mode, int count, int type, Buffer indices) {
-        Address address = AddressUtils.of(indices);
-        OpenGL.glDrawElements(mode, count, type, address);
-        AddressUtils.put(indices, address);
+        OpenGL.glDrawElements(mode, count, type, indices);
     }
 
     @Override
@@ -1552,14 +1531,14 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glGenTextures(int n, IntBuffer textures) {
-        Address address = AddressUtils.of(textures);
-        OpenGL.glGenTextures(n, address);
-        AddressUtils.put(textures, address);
+        OpenGL.glGenTextures(n, textures);
     }
 
     @Override
     public int glGenTexture() {
-        return OpenGL.glGenTexture();
+        IntBuffer texture = IntBuffer.allocate(1);
+        OpenGL.glGenTextures(1, texture);
+        return texture.get(0);
     }
 
     @Override
@@ -1569,9 +1548,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glGetIntegerv(int pname, IntBuffer params) {
-        Address address = AddressUtils.of(params);
-        OpenGL.glGetIntegerv(pname, address);
-        AddressUtils.put(params, address);
+        OpenGL.glGetIntegerv(pname, params);
     }
 
     @Override
@@ -1601,9 +1578,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glReadPixels(int x, int y, int width, int height, int format, int type, Buffer pixels) {
-        Address address = AddressUtils.of(pixels);
-        OpenGL.glReadPixels(x, y, width, height, format, type, address);
-        AddressUtils.put(pixels, address);
+        OpenGL.glReadPixels(x, y, width, height, format, type, pixels);
     }
 
     @Override
@@ -1638,10 +1613,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels) {
-        Address address = AddressUtils.of(pixels);
-        OpenGL.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, address);
-        pixels.rewind();
-        AddressUtils.put(pixels, address);
+        OpenGL.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
     }
 
     @Override
@@ -1701,10 +1673,7 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glBufferSubData(int target, int offset, int size, Buffer data) {
-        Address address = AddressUtils.of(data);
-        OpenGL.glBufferSubData(target, offset, size, address);
-        data.rewind();
-        AddressUtils.put(data, address);
+        OpenGL.glBufferSubData(target, offset, size, data);
     }
 
     @Override
@@ -1729,28 +1698,26 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteBuffer(int buffer) {
-        OpenGL.glDeleteBuffer(buffer);
+        IntBuffer buffers = IntBuffer.allocate(1);
+        buffers.put(buffer);
+        OpenGL.glDeleteBuffers(1, buffers);
     }
 
     @Override
     public void glDeleteBuffers(int n, IntBuffer buffers) {
-        Address address = AddressUtils.of(buffers);
-        OpenGL.glDeleteBuffers(n, address);
-        buffers.rewind();
-        AddressUtils.put(buffers, address);
+        OpenGL.glDeleteBuffers(n, buffers);
     }
 
     @Override
     public void glDeleteFramebuffer(int framebuffer) {
-        OpenGL.glDeleteFramebuffer(framebuffer);
+        IntBuffer framebuffers = IntBuffer.allocate(1);
+        framebuffers.put(framebuffer);
+        OpenGL.glDeleteFramebuffers(1, framebuffers);
     }
 
     @Override
     public void glDeleteFramebuffers(int n, IntBuffer framebuffers) {
-        Address address = AddressUtils.of(framebuffers);
-        OpenGL.glDeleteFramebuffers(n, address);
-        framebuffers.rewind();
-        AddressUtils.put(framebuffers, address);
+        OpenGL.glDeleteFramebuffers(n, framebuffers);
     }
 
     @Override
@@ -1760,20 +1727,24 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteRenderbuffer(int renderbuffer) {
-        OpenGL.glDeleteRenderbuffer(renderbuffer);
+        IntBuffer renderbuffers = IntBuffer.allocate(1);
+        renderbuffers.put(renderbuffer);
+        OpenGL.glDeleteRenderbuffers(1, renderbuffers);
     }
 
     @Override
     public void glDeleteRenderbuffers(int n, IntBuffer renderbuffers) {
-        Address address = AddressUtils.of(renderbuffers);
-        OpenGL.glDeleteRenderbuffers(n, address);
-        renderbuffers.rewind();
-        AddressUtils.put(renderbuffers, address);
+        OpenGL.glDeleteRenderbuffers(n, renderbuffers);
     }
 
     @Override
     public void glDeleteShader(int shader) {
         OpenGL.glDeleteShader(shader);
+        Long address = managedShaderSources.remove(shader);
+        Address strings = Address.fromLong(address);
+        Address source = strings.getAddress();
+        Memory.free(source);
+        Memory.free(strings);
     }
 
     @Override
@@ -1808,15 +1779,14 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public int glGenBuffer() {
-        return OpenGL.glGenBuffer();
+        IntBuffer buffer = IntBuffer.allocate(1);
+        OpenGL.glGenBuffers(1, buffer);
+        return buffer.get(0);
     }
 
     @Override
     public void glGenBuffers(int n, IntBuffer buffers) {
-        Address address = AddressUtils.of(buffers);
-        OpenGL.glGenBuffers(n, address);
-        buffers.rewind();
-        AddressUtils.put(buffers, address);
+        OpenGL.glGenBuffers(n, buffers);
     }
 
     @Override
@@ -1826,63 +1796,47 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public int glGenFramebuffer() {
-        return OpenGL.glGenFramebuffer();
+        IntBuffer buffer = IntBuffer.allocate(1);
+        OpenGL.glGenFramebuffers(1, buffer);
+        return buffer.get(0);
     }
 
     @Override
     public void glGenFramebuffers(int n, IntBuffer framebuffers) {
-        Address address = AddressUtils.of(framebuffers);
-        OpenGL.glGenFramebuffers(n, address);
-        framebuffers.rewind();
-        AddressUtils.put(framebuffers, address);
+        OpenGL.glGenFramebuffers(n, framebuffers);
     }
 
     @Override
     public int glGenRenderbuffer() {
-        return OpenGL.glGenRenderbuffer();
+        IntBuffer buffer = IntBuffer.allocate(1);
+        OpenGL.glGenRenderbuffers(1, buffer);
+        return buffer.get(0);
     }
 
     @Override
     public void glGenRenderbuffers(int n, IntBuffer renderbuffers) {
-        Address address = AddressUtils.of(renderbuffers);
-        OpenGL.glGenRenderbuffers(n, address);
-        renderbuffers.rewind();
-        AddressUtils.put(renderbuffers, address);
+        OpenGL.glGenRenderbuffers(n, renderbuffers);
     }
 
     @Override
     public String glGetActiveAttrib(int program, int index, IntBuffer size, IntBuffer type) {
-        Address sizeAddress = AddressUtils.of(size);
-        Address typeAddress = AddressUtils.of(type);
-        String result = OpenGL.glGetActiveAttrib(program, index, sizeAddress, typeAddress);
-        size.rewind();
-        type.rewind();
-        AddressUtils.put(size, sizeAddress);
-        AddressUtils.put(type, typeAddress);
-        return result;
+        CharBuffer nameBuf = CharBuffer.allocate(512);
+        IntBuffer lenBuf = IntBuffer.allocate(1);
+        OpenGL.glGetActiveAttrib(program, index, 512, lenBuf, size, type, nameBuf);
+        return nameBuf.limit(lenBuf.get(0)).toString();
     }
 
     @Override
     public String glGetActiveUniform(int program, int index, IntBuffer size, IntBuffer type) {
-        Address sizeAddress = AddressUtils.of(size);
-        Address typeAddress = AddressUtils.of(type);
-        String result = OpenGL.glGetActiveUniform(program, index, sizeAddress, typeAddress);
-        size.rewind();
-        type.rewind();
-        AddressUtils.put(size, sizeAddress);
-        AddressUtils.put(type, typeAddress);
-        return result;
+        CharBuffer nameBuf = CharBuffer.allocate(512);
+        IntBuffer lenBuf = IntBuffer.allocate(1);
+        OpenGL.glGetActiveUniform(program, index, 512, lenBuf, size, type, nameBuf);
+        return nameBuf.limit(lenBuf.get(0)).toString();
     }
 
     @Override
     public void glGetAttachedShaders(int program, int maxcount, Buffer count, IntBuffer shaders) {
-        Address countAddress = AddressUtils.of(count);
-        Address shadersAddress = AddressUtils.of(shaders);
-        OpenGL.glGetAttachedShaders(program, maxcount, countAddress, shadersAddress);
-        count.rewind();
-        shaders.rewind();
-        AddressUtils.put(count, countAddress);
-        AddressUtils.put(shaders, shadersAddress);
+        OpenGL.glGetAttachedShaders(program, maxcount, count, shaders);
     }
 
     @Override
@@ -1932,7 +1886,10 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public String glGetProgramInfoLog(int program) {
-        return OpenGL.glGetProgramInfoLog(program);
+        CharBuffer buffer = CharBuffer.allocate(8192);
+        IntBuffer len = IntBuffer.allocate(1);
+        OpenGL.glGetProgramInfoLog(program, 8192, len, buffer);
+        return buffer.limit(len.get(0)).toString();
     }
 
     @Override
@@ -1953,7 +1910,10 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public String glGetShaderInfoLog(int shader) {
-        return OpenGL.glGetShaderInfoLog(shader);
+        CharBuffer buffer = CharBuffer.allocate(8192);
+        IntBuffer len = IntBuffer.allocate(1);
+        OpenGL.glGetShaderInfoLog(shader, 8192, len, buffer);
+        return buffer.limit(len.get(0)).toString();
     }
 
     @Override
@@ -2087,7 +2047,13 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glShaderSource(int shader, String string) {
-        OpenGL.glShaderSource(shader, string);
+        Address strings = Address.ofData(new byte[Address.sizeOf()]);
+        Address source = Strings.toC(string);
+        this.managedShaderSources.put(shader, strings.toLong());
+        strings.putAddress(source);
+        IntBuffer len = IntBuffer.allocate(1);
+        len.put(0, string.length());
+        OpenGL.glShaderSource(shader, 1, strings, len);
     }
 
     @Override
@@ -2286,14 +2252,13 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix4fv(int location, int count, boolean transpose, FloatBuffer value) {
-        Address address = AddressUtils.of(value);
-        OpenGL.glUniformMatrix4fv(location, count, transpose, address);
-        AddressUtils.put(value, address);
+        OpenGL.glUniformMatrix4fv(location, count, transpose, value);
     }
 
     @Override
     public void glUniformMatrix4fv(int location, int count, boolean transpose, float[] value, int offset) {
-        OpenGL.glUniformMatrix4fv(location, count, transpose, Address.ofData(value), offset);
+        FloatBuffer buffer = FloatBuffer.wrap(value, offset, count * 16);
+        OpenGL.glUniformMatrix4fv(location, count, transpose, buffer);
     }
 
     @Override

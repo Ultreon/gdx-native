@@ -429,7 +429,6 @@ public class NativeApplication implements NativeApplicationBase {
     void createWindow(NativeWindow window, NativeApplicationConfiguration config, long sharedContext) {
         long windowHandle = createwindow(config, sharedContext);
         window.create(windowHandle);
-        window.setVisible(config.initialVisible);
 
         for (int i = 0; i < 2; i++) {
             window.getGraphics().gl20.glClearColor(config.initialBackgroundColor.r, config.initialBackgroundColor.g,
@@ -443,11 +442,13 @@ public class NativeApplication implements NativeApplicationBase {
             // ensure that the invariant "currentWindow is the window with the current active OpenGL context" holds
             currentWindow.makeCurrent();
         }
+
+        OpenGL.glewInit();
     }
 
     static long createwindow(NativeApplicationConfiguration config, long sharedContextWindow) {
         GLFW.defaultWindowHints();
-        GLFW.windowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+        GLFW.windowHint(GLFW.GLFW_VISIBLE, config.initialVisible ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
         GLFW.windowHint(GLFW.GLFW_RESIZABLE, config.windowResizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
         GLFW.windowHint(GLFW.GLFW_MAXIMIZED, config.windowMaximized ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
         GLFW.windowHint(GLFW.GLFW_AUTO_ICONIFY, config.autoIconify ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);

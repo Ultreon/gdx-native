@@ -17,6 +17,7 @@
 package dev.ultreon.gdx.c;
 
 import com.badlogic.gdx.AbstractInput;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputEventQueue;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.glutils.HdpiMode;
@@ -30,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultNativeInput extends AbstractInput implements NativeInput {
-    private static final Map<Address, DefaultNativeInput> byWindow = new HashMap<>();
+    private static final Map<Long, DefaultNativeInput> byWindow = new HashMap<>();
     final NativeWindow window;
     private InputProcessor inputProcessor;
     final InputEventQueue eventQueue = new InputEventQueue();
@@ -51,69 +52,85 @@ public class DefaultNativeInput extends AbstractInput implements NativeInput {
     final boolean[] justPressedKeys = new boolean[512];
 
     static void charCallback(Address window, int codepoint) {
-        DefaultNativeInput input = DefaultNativeInput.byWindow(window);
+        try {
+            DefaultNativeInput input = DefaultNativeInput.byWindow(window);
 
-        if ((codepoint & 0xff00) == 0xf700) return;
-        input.lastCharacter = (char) codepoint;
-        input.window.getGraphics().requestRendering();
-        input.eventQueue.keyTyped((char) codepoint, System.nanoTime());
+            if ((codepoint & 0xff00) == 0xf700) return;
+            input.lastCharacter = (char) codepoint;
+            input.window.getGraphics().requestRendering();
+            input.eventQueue.keyTyped((char) codepoint, System.nanoTime());
+        } catch (Throwable t) {
+            Gdx.app.error("NativeInput", "Error in charCallback", t);
+        }
     }
 
     private final GLFWScrollCallback scrollCallback = Function.get(GLFWScrollCallback.class, DefaultNativeInput.class, "scrollCallback");
 
     public static void scrollCallback(Address window, double scrollX, double scrollY) {
-        DefaultNativeInput input = DefaultNativeInput.byWindow(window);
-        input.window.getGraphics().requestRendering();
-        input.eventQueue.scrolled(-(float) scrollX, -(float) scrollY, System.nanoTime());
+        try {
+            DefaultNativeInput input = DefaultNativeInput.byWindow(window);
+            input.window.getGraphics().requestRendering();
+            input.eventQueue.scrolled(-(float) scrollX, -(float) scrollY, System.nanoTime());
+        } catch (Throwable t) {
+            Gdx.app.error("NativeInput", "Error in scrollCallback", t);
+        }
     }
 
     private final GLFWCursorPosCallback cursorPosCallback = Function.get(GLFWCursorPosCallback.class, DefaultNativeInput.class, "cursorPosCallback");
 
     public static void cursorPosCallback(Address windowHandle, double x, double y) {
-        DefaultNativeInput input = DefaultNativeInput.byWindow(windowHandle);
-        int logicalMouseY = (int) y;
-        int logicalMouseX = (int) x;
-        input.deltaX = (int) x - logicalMouseX;
-        input.deltaY = (int) y - logicalMouseY;
-        input.mouseX = logicalMouseX;
-        input.mouseY = logicalMouseY;
+        try {
+            DefaultNativeInput input = DefaultNativeInput.byWindow(windowHandle);
+            int logicalMouseY = (int) y;
+            int logicalMouseX = (int) x;
+            input.deltaX = (int) x - logicalMouseX;
+            input.deltaY = (int) y - logicalMouseY;
+            input.mouseX = logicalMouseX;
+            input.mouseY = logicalMouseY;
 
-        if (input.window.getConfig().hdpiMode == HdpiMode.Pixels) {
-            float xScale = input.window.getGraphics().getBackBufferWidth() / (float) input.window.getGraphics().getLogicalWidth();
-            float yScale = input.window.getGraphics().getBackBufferHeight() / (float) input.window.getGraphics().getLogicalHeight();
-            input.deltaX = (int) (input.deltaX * xScale);
-            input.deltaY = (int) (input.deltaY * yScale);
-            input.mouseX = (int) (input.mouseX * xScale);
-            input.mouseY = (int) (input.mouseY * yScale);
-        }
+            if (input.window.getConfig().hdpiMode == HdpiMode.Pixels) {
+                float xScale = input.window.getGraphics().getBackBufferWidth() / (float) input.window.getGraphics().getLogicalWidth();
+                float yScale = input.window.getGraphics().getBackBufferHeight() / (float) input.window.getGraphics().getLogicalHeight();
+                input.deltaX = (int) (input.deltaX * xScale);
+                input.deltaY = (int) (input.deltaY * yScale);
+                input.mouseX = (int) (input.mouseX * xScale);
+                input.mouseY = (int) (input.mouseY * yScale);
+            }
 
-        input.window.getGraphics().requestRendering();
-        long time = System.nanoTime();
-        if (input.mousePressed > 0) {
-            input.eventQueue.touchDragged(input.mouseX, input.mouseY, 0, time);
-        } else {
-            input.eventQueue.mouseMoved(input.mouseX, input.mouseY, time);
+            input.window.getGraphics().requestRendering();
+            long time = System.nanoTime();
+            if (input.mousePressed > 0) {
+                input.eventQueue.touchDragged(input.mouseX, input.mouseY, 0, time);
+            } else {
+                input.eventQueue.mouseMoved(input.mouseX, input.mouseY, time);
+            }
+        } catch (Throwable t) {
+            Gdx.app.error("NativeInput", "Error in cursorPosCallback", t);
         }
     }
 
     private final GLFWMouseButtonCallback mouseButtonCallback = Function.get(GLFWMouseButtonCallback.class, DefaultNativeInput.class, "mouseButtonCallback");
 
     public static void mouseButtonCallback(Address windowHandle, int button, int action, int mods) {
-        DefaultNativeInput input = byWindow(windowHandle);
-        int gdxButton = toGdxButton(button);
-        if (button != -1 && gdxButton == -1) return;
+        try {
+            DefaultNativeInput input = byWindow(windowHandle);
+            int gdxButton = toGdxButton(button);
+            if (button != -1 && gdxButton == -1) return;
 
-        long time = System.nanoTime();
-        if (action == GLFW.GLFW_PRESS) {
-            input.mousePressed++;
-            input.justTouched = true;
-            input.justPressedButtons[gdxButton] = true;
-            input.window.getGraphics().requestRendering();
-            input.eventQueue.touchDown(input.mouseX, input.mouseY, 0, gdxButton, time);
-        } else {
-            input.mousePressed = Math.max(0, input.mousePressed - 1);
-            input.window.getGraphics().requestRendering();
-            input.eventQueue.touchUp(input.mouseX, input.mouseY, 0, gdxButton, time);
+            long time = System.nanoTime();
+            if (action == GLFW.GLFW_PRESS) {
+                input.mousePressed++;
+                input.justTouched = true;
+                input.justPressedButtons[gdxButton] = true;
+                input.window.getGraphics().requestRendering();
+                input.eventQueue.touchDown(input.mouseX, input.mouseY, 0, gdxButton, time);
+            } else {
+                input.mousePressed = Math.max(0, input.mousePressed - 1);
+                input.window.getGraphics().requestRendering();
+                input.eventQueue.touchUp(input.mouseX, input.mouseY, 0, gdxButton, time);
+            }
+        } catch (Throwable t) {
+            Gdx.app.error("NativeInput", "Error in mouseButtonCallback", t);
         }
     }
 
@@ -132,38 +149,42 @@ public class DefaultNativeInput extends AbstractInput implements NativeInput {
     }
 
     static void keyCallback(Address window, int key, int scancode, int action, int mods) {
-        DefaultNativeInput input = DefaultNativeInput.byWindow(window);
-        switch (action) {
-            case GLFW.GLFW_PRESS:
-                key = input.getGdxKeyCode(key);
-                input.eventQueue.keyDown(key, System.nanoTime());
-                input.pressedKeyCount++;
-                input.keyJustPressed = true;
-                input.pressedKeys[key] = true;
-                input.justPressedKeys[key] = true;
-                input.window.getGraphics().requestRendering();
-                input.lastCharacter = 0;
-                char character = input.characterForKeyCode(key);
-                if (character != 0) input.charCallback.invoke(window, character);
-                break;
-            case GLFW.GLFW_RELEASE:
-                key = input.getGdxKeyCode(key);
-                input.pressedKeyCount--;
-                input.pressedKeys[key] = false;
-                input.window.getGraphics().requestRendering();
-                input.eventQueue.keyUp(key, System.nanoTime());
-                break;
-            case GLFW.GLFW_REPEAT:
-                if (input.lastCharacter != 0) {
+        try {
+            DefaultNativeInput input = DefaultNativeInput.byWindow(window);
+            switch (action) {
+                case GLFW.GLFW_PRESS:
+                    key = input.getGdxKeyCode(key);
+                    input.eventQueue.keyDown(key, System.nanoTime());
+                    input.pressedKeyCount++;
+                    input.keyJustPressed = true;
+                    input.pressedKeys[key] = true;
+                    input.justPressedKeys[key] = true;
                     input.window.getGraphics().requestRendering();
-                    input.eventQueue.keyTyped(input.lastCharacter, System.nanoTime());
-                }
-                break;
+                    input.lastCharacter = 0;
+                    char character = input.characterForKeyCode(key);
+                    if (character != 0) input.charCallback.invoke(window, character);
+                    break;
+                case GLFW.GLFW_RELEASE:
+                    key = input.getGdxKeyCode(key);
+                    input.pressedKeyCount--;
+                    input.pressedKeys[key] = false;
+                    input.window.getGraphics().requestRendering();
+                    input.eventQueue.keyUp(key, System.nanoTime());
+                    break;
+                case GLFW.GLFW_REPEAT:
+                    if (input.lastCharacter != 0) {
+                        input.window.getGraphics().requestRendering();
+                        input.eventQueue.keyTyped(input.lastCharacter, System.nanoTime());
+                    }
+                    break;
+            }
+        } catch (Throwable t) {
+            Gdx.app.error("NativeInput", "Error in keyCallback", t);
         }
     }
 
     private static DefaultNativeInput byWindow(Address window) {
-        return byWindow.get(window);
+        return byWindow.get(window.toLong());
     }
 
     @Override
@@ -182,6 +203,7 @@ public class DefaultNativeInput extends AbstractInput implements NativeInput {
     @Override
     public void windowHandleChanged(long windowHandle) {
         resetPollingStates();
+        byWindow.put(windowHandle, this);
         GLFW.setKeyCallback(window.getWindowHandle(), keyCallback);
         GLFW.setCharCallback(window.getWindowHandle(), charCallback);
         GLFW.setScrollCallback(window.getWindowHandle(), scrollCallback);

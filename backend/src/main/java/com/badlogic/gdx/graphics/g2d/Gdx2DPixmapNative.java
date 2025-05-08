@@ -5,13 +5,13 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import dev.ultreon.gdx.c.Memory;
 import org.teavm.interop.Address;
 import org.teavm.interop.Function;
 import org.teavm.interop.Import;
 import org.teavm.interop.Structure;
-import org.teavm.interop.c.Include;
 
 public class Gdx2DPixmapNative implements Disposable {
     int width;
@@ -25,19 +25,205 @@ public class Gdx2DPixmapNative implements Disposable {
         this.width = pixmapInfo.width;
         this.height = pixmapInfo.height;
         this.buffer = pixmapInfo.pixels;
-        this.format = requestedFormat;
+        this.format = pixmapInfo.format;
 
-        switch (requestedFormat) {
-            case Gdx2DPixmap.GDX2D_FORMAT_RGBA8888:
-                break;
-            case Gdx2DPixmap.GDX2D_FORMAT_RGB888:
-                break;
-            case Gdx2DPixmap.GDX2D_FORMAT_RGB565:
-                break;
-            default:
-                break;
+        if (requestedFormat != format && requestedFormat != 0) {
+            convertTo(requestedFormat);
         }
     }
+
+    private void convertTo(int requestedFormat) {
+        switch (requestedFormat) {
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA8888:
+                convertToRGBA8888();
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA4444:
+                convertToRGBA4444();
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB888:
+                convertToRGB888();
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB565:
+                convertToRGB565();
+                break;
+            default:
+                throw new GdxRuntimeException("Unsupported conversion to " + requestedFormat + "!");
+        }
+    }
+
+    private void convertToRGBA8888() {
+        ByteBuffer newBuffer = ByteBuffer.allocateDirect(width * height * 4);
+        byte[] tmp;
+        switch (format) {
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB888:
+                tmp = new byte[3];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put(tmp);
+                        newBuffer.put((byte) 0xFF);
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA4444:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put((byte) (tmp[0] & 0xF * 255 / 15));
+                        newBuffer.put((byte) (tmp[0] << 4 & 0xF * 255 / 15));
+                        newBuffer.put((byte) (tmp[1] & 0xF * 255 / 15));
+                        newBuffer.put((byte) (tmp[1] << 4 & 0xF * 255 / 15));
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB565:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgb565 = ((tmp[0] & 0xFF) << 8) | (tmp[1] & 0xFF);
+                        newBuffer.put((byte) (((rgb565 >> 11) & 0x1F) * 255 / 31));
+                        newBuffer.put((byte) (((rgb565 >> 5) & 0x3F) * 255 / 63));
+                        newBuffer.put((byte) ((rgb565 & 0x1F) * 255 / 31));
+                        newBuffer.put((byte) 0xFF);
+                    }
+                }
+                break;
+            default:
+                throw new GdxRuntimeException("Unsupported conversion to RGBA8888!");
+        }
+    }
+
+    private void convertToRGBA4444() {
+        ByteBuffer newBuffer = ByteBuffer.allocateDirect(width * height * 2);
+        byte[] tmp;
+        switch (format) {
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA8888:
+                tmp = new byte[4];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put((byte) ((tmp[0] >> 4) | ((tmp[1] >> 4) << 4)));
+                        newBuffer.put((byte) ((tmp[2] >> 4) | ((tmp[3] >> 4) << 4)));
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB888:
+                tmp = new byte[3];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put((byte) ((tmp[0] >> 4) | ((tmp[1] >> 4) << 4)));
+                        newBuffer.put((byte) ((tmp[2] >> 4) | (0xF << 4)));
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB565:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgb565 = ((tmp[0] & 0xFF) << 8) | (tmp[1] & 0xFF);
+                        newBuffer.put((byte) (((rgb565 >> 12) & 0xF) | ((rgb565 >> 8) & 0xF0)));
+                        newBuffer.put((byte) (((rgb565 >> 4) & 0xF) | (0xF << 4)));
+                    }
+                }
+                break;
+            default:
+                throw new GdxRuntimeException("Unsupported conversion to RGBA4444!");
+        }
+        buffer = newBuffer;
+        format = Gdx2DPixmap.GDX2D_FORMAT_RGBA4444;
+    }
+
+    private void convertToRGB565() {
+        ByteBuffer newBuffer = ByteBuffer.allocateDirect(width * height * 2);
+        byte[] tmp;
+        switch (format) {
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA8888:
+                tmp = new byte[4];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgb565 = ((tmp[0] & 0xF8) << 8) | ((tmp[1] & 0xFC) << 3) | (tmp[2] >> 3);
+                        newBuffer.put((byte) (rgb565 >> 8));
+                        newBuffer.put((byte) rgb565);
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB888:
+                tmp = new byte[3];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgb565 = ((tmp[0] & 0xF8) << 8) | ((tmp[1] & 0xFC) << 3) | (tmp[2] >> 3);
+                        newBuffer.put((byte) (rgb565 >> 8));
+                        newBuffer.put((byte) rgb565);
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA4444:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgba4444 = ((tmp[0] & 0xFF) << 8) | (tmp[1] & 0xFF);
+                        int rgb565 = ((rgba4444 & 0xF000) << 4) | ((rgba4444 & 0x0F00) << 3) | ((rgba4444 & 0x00F0) << 1);
+                        newBuffer.put((byte) (rgb565 >> 8));
+                        newBuffer.put((byte) rgb565);
+                    }
+                }
+                break;
+            default:
+                throw new GdxRuntimeException("Unsupported conversion to RGB565!");
+        }
+        buffer = newBuffer;
+        format = Gdx2DPixmap.GDX2D_FORMAT_RGB565;
+    }
+
+    private void convertToRGB888() {
+        ByteBuffer newBuffer = ByteBuffer.allocateDirect(width * height * 4);
+        byte[] tmp;
+        switch (format) {
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA8888:
+                tmp = new byte[4];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put(tmp, 0, 3);
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGBA4444:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        newBuffer.put((byte) (tmp[0] & 0xF * 255 / 15));
+                        newBuffer.put((byte) (tmp[0] << 4 & 0xF * 255 / 15));
+                        newBuffer.put((byte) (tmp[1] & 0xF * 255 / 15));
+                    }
+                }
+                break;
+            case Gdx2DPixmap.GDX2D_FORMAT_RGB565:
+                tmp = new byte[2];
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        buffer.get(tmp);
+                        int rgb565 = ((tmp[0] & 0xFF) << 8) | (tmp[1] & 0xFF);
+                        newBuffer.put((byte) (((rgb565 >> 11) & 0x1F) * 255 / 31));
+                        newBuffer.put((byte) (((rgb565 >> 5) & 0x3F) * 255 / 63));
+                        newBuffer.put((byte) ((rgb565 & 0x1F) * 255 / 31));
+                    }
+                }
+                break;
+            default:
+                throw new GdxRuntimeException("Unsupported conversion to RGBA8888!");
+        }
+    }
+
+
 
     /**
      * @throws GdxRuntimeException if allocation failed.
@@ -200,12 +386,10 @@ public class Gdx2DPixmapNative implements Disposable {
         public Address img_buffer_original_end;
     }
 
-    @Include("stb_image.h")
     @Import(name = "stbi__refill_buffer")
     private static native void stbiRefillBuffer(STBIContext s);
 
     // initialize a memory-decode context
-    @Include("stb_image.h")
     @Import(name = "stbi__start_mem")
     private static void stbiStartMem(STBIContext s, Address buffer, int len) {
         s.io.read = null;
@@ -215,27 +399,21 @@ public class Gdx2DPixmapNative implements Disposable {
         s.img_buffer_end = s.img_buffer_original_end = buffer.add(len);
     }
 
-    @Include("stb_image.h")
     @Import(name = "stbi__start_callbacks")
     private static native void stbiStartCallbacks(STBIContext s, STBIIOCallbacks io, Address user);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__stdio_read")
     private static native int stbiStdioRead(Address user, Address data, int size);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__stdio_skip")
     private static native int stbiStdioSkip(Address user, int n);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__stdio_eof")
     private static native int stbiStdioEof(Address user);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__start_file")
     private static native void stbiStartFile(STBIContext s, String name);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__rewind")
     private static native void stbiRewind(STBIContext s);
 
@@ -287,147 +465,111 @@ public class Gdx2DPixmapNative implements Disposable {
         int depth;
     }
 
-    @Include("stb_image.h")
     @Import(name = "stbi__jpeg_test")
     private static native int stbiJpegTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__jpeg_load")
     private static native Address stbiJpegLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__jpeg_info")
     private static native int stbiJpegInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__png_test")
     private static native int stbiPngTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__png_load")
     private static native Address stbiPngLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__png_info")
     private static native int stbiPngInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__png_is16")
     private static native int stbiPngIs16(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__bmp_test")
     private static native int stbiBmpTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__bmp_load")
     private static native Address stbiBmpLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__bmp_info")
     private static native int stbiBmpInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__tga_test")
     private static native int stbiTgaTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__tga_load")
     private static native Address stbiTgaLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__tga_info")
     private static native int stbiTgaInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__psd_test")
     private static native int stbiPsdTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__psd_load")
     private static native Address stbiPsdLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri, int bpc);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__psd_info")
     private static native int stbiPsdInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__psd_is16")
     private static native int stbiPsdIs16(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__hdr_test")
     private static native int stbiHdrTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__hdr_load")
     private static native Address stbiHdrLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__hdr_info")
     private static native int stbiHdrInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pic_test")
     private static native int stbiPicTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pic_load")
     private static native Address stbiPicLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pic_info")
     private static native int stbiPicInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__gif_test")
     private static native int stbiGifTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__gif_load")
     private static native Address stbiGifLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__load_gif_main")
     private static native Address stbiLoadGifMain(STBIContext s, Address delays, Address x, Address y, Address z, Address comp, int reqComp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__gif_info")
     private static native int stbiGifInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pnm_test")
     private static native int stbiPnmTest(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pnm_load")
     private static native Address stbiPnmLoad(STBIContext s, Address x, Address y, Address comp, int reqComp, STBIResultInfo ri);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pnm_info")
     private static native int stbiPnmInfo(STBIContext s, Address x, Address y, Address comp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi__pnm_is16")
     private static native int stbiPnmIs16(STBIContext s);
 
-    @Include("stb_image.h")
     @Import(name = "stbi_load")
     private static native ByteBuffer stbiLoad(String filename, IntBuffer x, IntBuffer y, IntBuffer comp, int reqComp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi_load_from_file")
     private static native ByteBuffer stbiLoadFromFile(String file, IntBuffer x, IntBuffer y, IntBuffer comp, int reqComp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi_load_from_file_16")
     private static native ByteBuffer stbiLoadFromFile16(String file, IntBuffer x, IntBuffer y, IntBuffer comp, int reqComp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi_load_from_memory")
     private static native ByteBuffer stbiLoadFromMemory(ByteBuffer buffer, int len, IntBuffer x, IntBuffer y, IntBuffer comp, int reqComp);
 
-    @Include("stb_image.h")
     @Import(name = "stbi_load_16")
     private static native ByteBuffer stbiLoad16(String filename, IntBuffer x, IntBuffer y, IntBuffer comp, int reqComp);
 
@@ -440,8 +582,40 @@ public class Gdx2DPixmapNative implements Disposable {
         if (pixels == null || x.get() == 0 || y.get() == 0) {
             throw new GdxRuntimeException("Failed to load image from memory");
         }
+        pixels.flip();
 
-        return new PixmapInfo(x.get(0), y.get(0), comp.get(0), pixels);
+        int components = comp.get();
+        if (components == 0) {
+            throw new GdxRuntimeException("Failed to load image from memory: No components");
+        }
+
+        if (components > 4) {
+            throw new GdxRuntimeException("Failed to load image from memory: Too many components");
+        }
+
+        int format = Gdx2DPixmap.GDX2D_FORMAT_RGBA8888;
+        switch (components) {
+            case 1: {
+                format = Gdx2DPixmap.GDX2D_FORMAT_ALPHA;
+                break;
+            }
+            case 2: {
+                format = Gdx2DPixmap.GDX2D_FORMAT_RGBA4444;
+                break;
+            }
+            case 3: {
+                format = Gdx2DPixmap.GDX2D_FORMAT_RGB565;
+                break;
+            }
+            case 4: {
+                break;
+            }
+            default: {
+                throw new GdxRuntimeException("Failed to load image from memory: Unsupported number of components");
+            }
+        }
+
+        return new PixmapInfo(x.get(0), y.get(0), format, pixels);
     } /*MANUAL
         const unsigned char* p_buffer = (const unsigned char*)env->GetPrimitiveArrayCritical(buffer, 0);
         gdx2d_pixmap* pixmap = gdx2d_load(p_buffer + offset, len);
@@ -608,13 +782,13 @@ public class Gdx2DPixmapNative implements Disposable {
     private static class PixmapInfo {
         private final int width;
         private final int height;
-        private final int components;
+        private final int format;
         private final ByteBuffer pixels;
 
-        public PixmapInfo(int width, int height, int components, ByteBuffer pixels) {
+        public PixmapInfo(int width, int height, int format, ByteBuffer pixels) {
             this.width = width;
             this.height = height;
-            this.components = components;
+            this.format = format;
             this.pixels = pixels;
         }
 
@@ -626,8 +800,8 @@ public class Gdx2DPixmapNative implements Disposable {
             return height;
         }
 
-        public int getComponents() {
-            return components;
+        public int getFormat() {
+            return format;
         }
 
         public ByteBuffer getPixels() {

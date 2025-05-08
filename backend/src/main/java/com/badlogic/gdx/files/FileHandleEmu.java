@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+import java.nio.file.StandardOpenOption;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Files.FileType;
@@ -122,18 +123,23 @@ public class FileHandleEmu {
 	/** Returns a stream for reading this file as bytes.
 	 * @throws GdxRuntimeException if the file handle represents a directory, doesn't exist, or could not be read. */
 	public InputStream read () {
-		if (type == FileType.Classpath || (type == FileType.Internal && !file().exists())
-			|| (type == FileType.Local && !file().exists())) {
+		if (type == FileType.Classpath || type == FileType.Internal) {
             InputStream input;
-            try {
-                input = new FileInputStream(new File("resources", file.getPath().replace('\\', '/')));
+			File file1 = new File("assets", path().replace('\\', '/'));
+			try {
+				if (!file1.exists()) {
+					throw new GdxRuntimeException("File not found: " + file1.getAbsolutePath());
+				}
+				input = new FileInputStream(file1.getAbsolutePath());
             } catch (FileNotFoundException e) {
-                throw new GdxRuntimeException("File not found: " + file + " (" + type + ")", e);
+                throw new GdxRuntimeException("File not found: " + file1.getAbsolutePath() + " (" + type + ")");
             }
             return input;
 		}
 		try {
 			return new FileInputStream(file());
+		} catch (FileNotFoundException e) {
+			throw new GdxRuntimeException("File not found: " + file + " (" + type + ")", e);
 		} catch (Exception ex) {
 			if (file().isDirectory())
 				throw new GdxRuntimeException("Cannot open a stream to a directory: " + file + " (" + type + ")", ex);
@@ -547,11 +553,7 @@ public class FileHandleEmu {
 			if (file().exists()) return true;
 			// Fall through.
 		case Classpath:
-            try (InputStream resourceAsStream = new FileInputStream(new File("resources", file.getPath().replace('\\', '/')))) {
-                return resourceAsStream != null;
-            } catch (IOException e) {
-                return false;
-            }
+			return new File("assets", path().replace('\\', '/')).exists();
         }
 		return file().exists();
 	}
@@ -631,15 +633,8 @@ public class FileHandleEmu {
 	/** Returns the length in bytes of this file, or 0 if this file is a directory, does not exist, or the size cannot otherwise be
 	 * determined. */
 	public long length () {
-		if (type == FileType.Classpath || (type == FileType.Internal && !file.exists())) {
-			InputStream input = read();
-			try {
-				return input.available();
-			} catch (Exception ignored) {
-			} finally {
-				StreamUtils.closeQuietly(input);
-			}
-			return 0;
+		if (type == FileType.Classpath || type == FileType.Internal) {
+			return new File("assets", path().replace('\\', '/')).length();
 		}
 		return file().length();
 	}

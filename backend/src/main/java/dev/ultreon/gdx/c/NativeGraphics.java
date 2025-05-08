@@ -18,6 +18,7 @@ package dev.ultreon.gdx.c;
 
 import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Cursor.SystemCursor;
 import com.badlogic.gdx.graphics.glutils.GLVersion;
@@ -64,22 +65,27 @@ public class NativeGraphics extends AbstractGraphics implements Disposable {
     GLFWFramebufferSizeCallback resizeCallback = Function.get(GLFWFramebufferSizeCallback.class, NativeGraphics.class, "resizeCallback");
 
     public static void resizeCallback(Address windowHandle, int width, int height) {
-        NativeWindow window = NativeWindow.byAddress(windowHandle);
-        NativeGraphics graphics = window.getGraphics();
+        try {
+            NativeWindow window = NativeWindow.byAddress(windowHandle);
+            NativeGraphics graphics = window.getGraphics();
 //        if (!"glfw_async".equals(Configuration.GLFW_LIBRARY_NAME.get())) {
-        graphics.updateFramebufferInfo();
-        if (!window.isListenerInitialized()) {
-            return;
-        }
-        window.makeCurrent();
-        graphics.gl20.glViewport(0, 0, graphics.backBufferWidth, graphics.backBufferHeight);
-        window.getListener().resize(graphics.getWidth(), graphics.getHeight());
-        graphics.update();
-        window.getListener().render();
-        swapBuffers(windowHandle.toLong());
+            graphics.updateFramebufferInfo();
+            if (!window.isListenerInitialized()) {
+                return;
+            }
+            window.makeCurrent();
+            graphics.gl20.glViewport(0, 0, graphics.backBufferWidth, graphics.backBufferHeight);
+            window.getListener().resize(graphics.getWidth(), graphics.getHeight());
+            graphics.update();
+            window.getListener().render();
+            swapBuffers(windowHandle.toLong());
 //        } else {
 //            window.asyncResized = true;
 //        }
+
+        } catch (Throwable t) {
+            Gdx.app.error("NativeGraphics", "Error in resizeCallback");
+        }
     }
 
     public NativeGraphics(NativeWindow window) {

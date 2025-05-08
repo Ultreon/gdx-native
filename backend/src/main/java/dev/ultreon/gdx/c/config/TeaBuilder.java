@@ -1,11 +1,14 @@
 package dev.ultreon.gdx.c.config;
 
+import com.badlogic.gdx.files.FileHandle;
 import dev.ultreon.gdx.c.config.plugins.TeaClassTransformer;
 import dev.ultreon.gdx.c.config.plugins.TeaReflectionSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -117,6 +120,7 @@ public class TeaBuilder {
     public static boolean build(TeaVMTool tool, boolean logClassNames) {
         boolean isSuccess = false;
         try {
+            configAssets(tool);
             long timeStart = new Date().getTime();
             tool.generate();
             long timeEnd = new Date().getTime();
@@ -173,7 +177,76 @@ public class TeaBuilder {
         if(!isSuccess) {
             throw new RuntimeException("Build Failed");
         }
+
+        try {
+            Files.writeString(Path.of(setTargetDirectory.getAbsolutePath(), "glew_include.c"), "#include <GL/glew.h>\n" +
+                    "#define STB_IMAGE_IMPLEMENTATION\n" +
+                    "#include \"stb_image.h\"\n" +
+                    "#include \"all.c\"");
+        } catch (IOException e) {
+            throw new RuntimeException("Build Failed", e);
+        }
+
         return isSuccess;
+    }
+
+    public static void configAssets(TeaVMTool tool) {
+        TeaBuilder.logHeader("COPYING ASSETS");
+        String webappDirectory = configuration.targetDirectory;;
+        FileHandle distFolder = new FileHandle(webappDirectory);
+        FileHandle assetsFolder = distFolder.child("assets");
+        FileHandle scriptsFolder = distFolder.child("scripts");
+        FileHandle assetFile = assetsFolder.child("assets.txt");
+
+        AssetFilter filter = configuration.assetFilter;
+
+        boolean generateAssetPaths = configuration.shouldGenerateAssetFile;
+
+        ArrayList<AssetsCopy.Asset> alLAssets = new ArrayList<>();
+        // Copy Assets files
+        ArrayList<AssetFileHandle> assetsPaths = configuration.assetsPath;
+        for(int i = 0; i < assetsPaths.size(); i++) {
+            AssetFileHandle assetFileHandle = assetsPaths.get(i);
+            ArrayList<AssetsCopy.Asset> assets = AssetsCopy.copyAssets(assetFileHandle, filter, assetsFolder);
+            alLAssets.addAll(assets);
+        }
+
+        if(assetFile.exists()) {
+            // Delete assets.txt before adding the updated list.
+            assetFile.delete();
+        }
+
+        if(generateAssetPaths) {
+            AssetsCopy.generateAssetsFile(alLAssets, assetsFolder, assetFile);
+        }
+
+        // Copy assets from resources
+        List<String> resources = TeaVMResourceProperties.getResources(acceptedURL);
+
+        List<String> scripts = new ArrayList<>();
+        // Filter out javascript
+        for(int i = 0; i < resources.size(); i++) {
+            String asset = resources.get(i);
+            if(asset.endsWith(".js") || asset.endsWith(".wasm")) {
+                resources.remove(i);
+                scripts.add(asset);
+                i--;
+            }
+        }
+        // Copy additional classpath files
+        ArrayList<String> classPathAssetsFiles = configuration.additionalAssetsClasspathFiles;
+        ArrayList<AssetsCopy.Asset> classpathAssets = AssetsCopy.copyResources(classLoader, classPathAssetsFiles, filter, assetsFolder);
+
+        // Copy resources
+        ArrayList<AssetsCopy.Asset> resourceAssets = AssetsCopy.copyResources(classLoader, resources, filter, assetsFolder);
+
+        // Copy scripts
+        ArrayList<AssetsCopy.Asset> scriptsAssets = AssetsCopy.copyScripts(classLoader, scripts, scriptsFolder);
+
+        AssetsCopy.generateAssetsFile(classpathAssets, assetsFolder, assetFile);
+        AssetsCopy.generateAssetsFile(resourceAssets, assetsFolder, assetFile);
+
+        TeaBuilder.log("");
     }
 
     private static void preserveClasses(TeaVMTool tool, TeaBuildConfiguration configuration, NativeClassLoader classLoader) {

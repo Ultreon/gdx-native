@@ -3,9 +3,14 @@ package dev.ultreon.gdx.c.opengl;
 import com.badlogic.gdx.graphics.GL32;
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
+import org.teavm.interop.c.Include;
 
 import java.nio.Buffer;
+import java.nio.CharBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
+@Include("GL/glew.h")
 public class OpenGL {
     public static final int GL_VERSION_1_0 = 1;
     public static final int GL_DEPTH_BUFFER_BIT = 0x00000100;
@@ -2391,6 +2396,9 @@ public class OpenGL {
     public static final int GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR = 0x9633;
     public static final int GL_OVR_multiview2 = 1;
 
+    @Import(name = "glewInit")
+    public static native void glewInit();
+
     @Import(name = "glBlendBarrier")
     public static native void glBlendBarrier();
 
@@ -2824,16 +2832,10 @@ public class OpenGL {
     public static native void glBindVertexArray(int array);
 
     @Import(name = "glDeleteVertexArrays")
-    public static native void glDeleteVertexArrays(int n, Address arrays);
-
-    @Import(name = "glDeleteVertexArrays")
-    public static native void glDeleteVertexArrays(int n, Address arrays, int offset);
+    public static native void glDeleteVertexArrays(int n, IntBuffer arrays);
 
     @Import(name = "glGenVertexArrays")
-    public static native void glGenVertexArrays(int n, Address arrays);
-
-    @Import(name = "glGenVertexArrays")
-    public static native void glGenVertexArrays(int n, Address arrays, int offset);
+    public static native void glGenVertexArrays(int n, IntBuffer arrays);
 
     @Import(name = "glIsVertexArray")
     public static native boolean glIsVertexArray(int array);
@@ -2956,19 +2958,19 @@ public class OpenGL {
     public static native void glSamplerParameteri(int sampler, int pname, int param);
 
     @Import(name = "glSamplerParameteriv")
-    public static native void glSamplerParameteriv(int sampler, int pname, Address param);
+    public static native void glSamplerParameteriv(int sampler, int pname, IntBuffer param);
 
     @Import(name = "glSamplerParameterf")
     public static native void glSamplerParameterf(int sampler, int pname, float param);
 
     @Import(name = "glSamplerParameterfv")
-    public static native void glSamplerParameterfv(int sampler, int pname, Address param);
+    public static native void glSamplerParameterfv(int sampler, int pname, FloatBuffer param);
 
     @Import(name = "glGetSamplerParameteriv")
-    public static native void glGetSamplerParameteriv(int sampler, int pname, Address params);
+    public static native void glGetSamplerParameteriv(int sampler, int pname, IntBuffer params);
 
     @Import(name = "glGetSamplerParameterfv")
-    public static native void glGetSamplerParameterfv(int sampler, int pname, Address params);
+    public static native void glGetSamplerParameterfv(int sampler, int pname, FloatBuffer params);
 
     @Import(name = "glVertexAttribDivisor")
     public static native void glVertexAttribDivisor(int index, int divisor);
@@ -2977,16 +2979,10 @@ public class OpenGL {
     public static native void glBindTransformFeedback(int target, int id);
 
     @Import(name = "glDeleteTransformFeedbacks")
-    public static native void glDeleteTransformFeedbacks(int n, Address ids, int offset);
-
-    @Import(name = "glDeleteTransformFeedbacks")
-    public static native void glDeleteTransformFeedbacks(int n, Address ids);
+    public static native void glDeleteTransformFeedbacks(int n, IntBuffer ids);
 
     @Import(name = "glGenTransformFeedbacks")
-    public static native void glGenTransformFeedbacks(int n, Address ids, int offset);
-
-    @Import(name = "glGenTransformFeedbacks")
-    public static native void glGenTransformFeedbacks(int n, Address ids);
+    public static native void glGenTransformFeedbacks(int n, IntBuffer ids);
 
     @Import(name = "glIsTransformFeedback")
     public static native boolean glIsTransformFeedback(int id);
@@ -3001,10 +2997,10 @@ public class OpenGL {
     public static native void glProgramParameteri(int program, int pname, int value);
 
     @Import(name = "glInvalidateFramebuffer")
-    public static native void glInvalidateFramebuffer(int target, int numAttachments, Address attachments);
+    public static native void glInvalidateFramebuffer(int target, int numAttachments, IntBuffer attachments);
 
     @Import(name = "glInvalidateSubFramebuffer")
-    public static native void glInvalidateSubFramebuffer(int target, int numAttachments, Address attachments, int x, int y, int width, int height);
+    public static native void glInvalidateSubFramebuffer(int target, int numAttachments, IntBuffer attachments, int x, int y, int width, int height);
 
     @Import(name = "glActiveTexture")
     public static native void glActiveTexture(int texture);
@@ -3031,10 +3027,10 @@ public class OpenGL {
     public static native void glColorMask(boolean red, boolean green, boolean blue, boolean alpha);
 
     @Import(name = "glCompressedTexImage2D")
-    public static native void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, Address data);
+    public static native void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, Buffer data);
 
     @Import(name = "glCompressedTexSubImage2D")
-    public static native void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, Address data);
+    public static native void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, Buffer data);
 
     @Import(name = "glCopyTexImage2D")
     public static native void glCopyTexImage2D(int target, int level, int internalformat, int x, int y, int width, int height, int border);
@@ -3046,10 +3042,7 @@ public class OpenGL {
     public static native void glCullFace(int mode);
 
     @Import(name = "glDeleteTextures")
-    public static native void glDeleteTextures(int n, Address textures);
-
-    @Import(name = "glDeleteTexture")
-    public static native void glDeleteTexture(int texture);
+    public static native void glDeleteTextures(int n, IntBuffer textures);
 
     @Import(name = "glDepthFunc")
     public static native void glDepthFunc(int func);
@@ -3067,7 +3060,7 @@ public class OpenGL {
     public static native void glDrawArrays(int mode, int first, int count);
 
     @Import(name = "glDrawElements")
-    public static native void glDrawElements(int mode, int count, int type, Address indices);
+    public static native void glDrawElements(int mode, int count, int type, Buffer indices);
 
     @Import(name = "glEnable")
     public static native void glEnable(int cap);
@@ -3082,16 +3075,13 @@ public class OpenGL {
     public static native void glFrontFace(int mode);
 
     @Import(name = "glGenTextures")
-    public static native void glGenTextures(int n, Address textures);
-
-    @Import(name = "glGenTexture")
-    public static native int glGenTexture();
+    public static native void glGenTextures(int n, IntBuffer textures);
 
     @Import(name = "glGetError")
     public static native int glGetError();
 
     @Import(name = "glGetIntegerv")
-    public static native void glGetIntegerv(int pname, Address params);
+    public static native void glGetIntegerv(int pname, IntBuffer params);
 
     @Import(name = "glGetString")
     public static native String glGetString(int name);
@@ -3109,7 +3099,7 @@ public class OpenGL {
     public static native void glPolygonOffset(float factor, float units);
 
     @Import(name = "glReadPixels")
-    public static native void glReadPixels(int x, int y, int width, int height, int format, int type, Address pixels);
+    public static native void glReadPixels(int x, int y, int width, int height, int format, int type, Buffer pixels);
 
     @Import(name = "glScissor")
     public static native void glScissor(int x, int y, int width, int height);
@@ -3130,7 +3120,7 @@ public class OpenGL {
     public static native void glTexParameterf(int target, int pname, float param);
 
     @Import(name = "glTexSubImage2D")
-    public static native void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, Address pixels);
+    public static native void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, Buffer pixels);
 
     @Import(name = "glViewport")
     public static native void glViewport(int x, int y, int width, int height);
@@ -3166,7 +3156,7 @@ public class OpenGL {
     public static native void glBufferData(int target, int size, Buffer data, int usage);
 
     @Import(name = "glBufferSubData")
-    public static native void glBufferSubData(int target, int offset, int size, Address data);
+    public static native void glBufferSubData(int target, int offset, int size, Buffer data);
 
     @Import(name = "glCheckFramebufferStatus")
     public static native int glCheckFramebufferStatus(int target);
@@ -3180,26 +3170,17 @@ public class OpenGL {
     @Import(name = "glCreateShader")
     public static native int glCreateShader(int type);
 
-    @Import(name = "glDeleteBuffer")
-    public static native void glDeleteBuffer(int buffer);
-
     @Import(name = "glDeleteBuffers")
-    public static native void glDeleteBuffers(int n, Address buffers);
-
-    @Import(name = "glDeleteFramebuffer")
-    public static native void glDeleteFramebuffer(int framebuffer);
+    public static native void glDeleteBuffers(int n, IntBuffer buffers);
 
     @Import(name = "glDeleteFramebuffers")
-    public static native void glDeleteFramebuffers(int n, Address framebuffers);
+    public static native void glDeleteFramebuffers(int n, IntBuffer framebuffers);
 
     @Import(name = "glDeleteProgram")
     public static native void glDeleteProgram(int program);
 
-    @Import(name = "glDeleteRenderbuffer")
-    public static native void glDeleteRenderbuffer(int renderbuffer);
-
     @Import(name = "glDeleteRenderbuffers")
-    public static native void glDeleteRenderbuffers(int n, Address renderbuffers);
+    public static native void glDeleteRenderbuffers(int n, IntBuffer renderbuffers);
 
     @Import(name = "glDeleteShader")
     public static native void glDeleteShader(int shader);
@@ -3222,35 +3203,26 @@ public class OpenGL {
     @Import(name = "glFramebufferTexture2D")
     public static native void glFramebufferTexture2D(int target, int attachment, int textarget, int texture, int level);
 
-    @Import(name = "glGenBuffer")
-    public static native int glGenBuffer();
-
     @Import(name = "glGenBuffers")
-    public static native void glGenBuffers(int n, Address buffers);
+    public static native void glGenBuffers(int n, IntBuffer buffers);
 
     @Import(name = "glGenerateMipmap")
     public static native void glGenerateMipmap(int target);
 
-    @Import(name = "glGenFramebuffer")
-    public static native int glGenFramebuffer();
-
     @Import(name = "glGenFramebuffers")
-    public static native void glGenFramebuffers(int n, Address framebuffers);
-
-    @Import(name = "glGenRenderbuffer")
-    public static native int glGenRenderbuffer();
+    public static native void glGenFramebuffers(int n, IntBuffer framebuffers);
 
     @Import(name = "glGenRenderbuffers")
-    public static native void glGenRenderbuffers(int n, Address renderbuffers);
+    public static native void glGenRenderbuffers(int n, IntBuffer renderbuffers);
 
     @Import(name = "glGetActiveAttrib")
-    public static native String glGetActiveAttrib(int program, int index, Address size, Address type);
+    public static native void glGetActiveAttrib(int program, int index, int maxLength, IntBuffer length, IntBuffer size, IntBuffer type, CharBuffer name);
 
     @Import(name = "glGetActiveUniform")
-    public static native String glGetActiveUniform(int program, int index, Address size, Address type);
+    public static native void glGetActiveUniform(int program, int index, int maxLength, IntBuffer length, IntBuffer size, IntBuffer type, CharBuffer name);
 
     @Import(name = "glGetAttachedShaders")
-    public static native void glGetAttachedShaders(int program, int maxcount, Address count, Address shaders);
+    public static native void glGetAttachedShaders(int program, int maxcount, Buffer count, IntBuffer shaders);
 
     @Import(name = "glGetAttribLocation")
     public static native int glGetAttribLocation(int program, String name);
@@ -3271,7 +3243,7 @@ public class OpenGL {
     public static native void glGetProgramiv(int program, int pname, Address params);
 
     @Import(name = "glGetProgramInfoLog")
-    public static native String glGetProgramInfoLog(int program);
+    public static native void glGetProgramInfoLog(int program, int bufsize, IntBuffer length, CharBuffer infolog);
 
     @Import(name = "glGetRenderbufferParameteriv")
     public static native void glGetRenderbufferParameteriv(int target, int pname, Address params);
@@ -3280,7 +3252,7 @@ public class OpenGL {
     public static native void glGetShaderiv(int shader, int pname, Address params);
 
     @Import(name = "glGetShaderInfoLog")
-    public static native String glGetShaderInfoLog(int shader);
+    public static native void glGetShaderInfoLog(int shader, int bufsize, IntBuffer length, CharBuffer infolog);
 
     @Import(name = "glGetShaderPrecisionFormat")
     public static native void glGetShaderPrecisionFormat(int shadertype, int precisiontype, Address range, Address precision);
@@ -3346,7 +3318,7 @@ public class OpenGL {
     public static native void glShaderBinary(int n, Address shaders, int binaryformat, Address binary, int length);
 
     @Import(name = "glShaderSource")
-    public static native void glShaderSource(int shader, String string);
+    public static native void glShaderSource(int shader, int count, Address strings, IntBuffer length);
 
     @Import(name = "glStencilFuncSeparate")
     public static native void glStencilFuncSeparate(int face, int func, int ref, int mask);
@@ -3451,10 +3423,7 @@ public class OpenGL {
     public static native void glUniformMatrix3fv(int location, int count, boolean transpose, Address value, int offset);
 
     @Import(name = "glUniformMatrix4fv")
-    public static native void glUniformMatrix4fv(int location, int count, boolean transpose, Address value);
-
-    @Import(name = "glUniformMatrix4fv")
-    public static native void glUniformMatrix4fv(int location, int count, boolean transpose, Address value, int offset);
+    public static native void glUniformMatrix4fv(int location, int count, boolean transpose, FloatBuffer value);
 
     @Import(name = "glUseProgram")
     public static native void glUseProgram(int program);
