@@ -147,9 +147,9 @@ public class NativeApplication implements NativeApplicationBase {
                     currentWindow = window;
                 }
                 if (targetFramerate == -2) targetFramerate = window.getConfig().foregroundFPS;
-                synchronized (lifecycleListeners) {
+//                synchronized (lifecycleListeners) {
                     haveWindowsRendered |= window.update();
-                }
+//                }
                 if (window.shouldClose()) {
                     closedWindows.add(window);
                 }
@@ -157,12 +157,12 @@ public class NativeApplication implements NativeApplicationBase {
             GLFW.pollEvents();
 
             boolean shouldRequestRendering;
-            synchronized (runnables) {
+//            synchronized (runnables) {
                 shouldRequestRendering = runnables.size > 0;
                 executedRunnables.clear();
                 executedRunnables.addAll(runnables);
                 runnables.clear();
-            }
+//            }
             for (Runnable runnable : executedRunnables) {
                 runnable.run();
             }
