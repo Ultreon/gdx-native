@@ -49,9 +49,19 @@ tasks.register("buildNativeLinux", Exec) {
     group = "build"
     dependsOn(tasks.buildC)
     inputs.dir(generatedCSources)
-    inputs.file(rootProject.file("CMakeLists.txt"))
+    inputs.file(project.file("CMakeLists.txt"))
     outputs.file(executableFile)
     executable = "./build-linux.sh"
+    workingDir = projectDir
+}
+
+tasks.register("buildNativeMacOS", Exec) {
+    group = "build"
+    dependsOn(tasks.buildC)
+    inputs.dir(generatedCSources)
+    inputs.file(project.file("CMakeLists.txt"))
+    outputs.file(executableFile)
+    executable = ["bash", "-c", "./build-macos.sh"]
     workingDir = projectDir
 }
 
