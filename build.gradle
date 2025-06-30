@@ -4,7 +4,7 @@ plugins {
     id 'java'
     id 'cpp'
     id 'c'
-    id "org.teavm" version "0.12.0"
+    id "org.teavm" version "0.12.2"
 }
 
 group = 'org.example'
@@ -64,7 +64,7 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.12.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
-    implementation "org.teavm:teavm-interop:0.12.0"
+    implementation "org.teavm:teavm-interop:0.12.2"
 
     // LibGDX
     implementation "com.badlogicgames.gdx:gdx:1.13.1"
