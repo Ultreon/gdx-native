@@ -1784,10 +1784,7 @@ public class NativeGL32 implements GL32 {
         nullCheck(shader);
 
         OpenGL.glDeleteShader(shader);
-        NativePointer address = managedShaderSources.remove(shader);
-        Address strings = address.address;
-        Address source = strings.getAddress();
-        Memory.free(source);
+        managedShaderSources.remove(shader);
     }
 
     private static void nullCheck(int value) {
