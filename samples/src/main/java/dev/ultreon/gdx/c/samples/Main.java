@@ -1,10 +1,12 @@
 package dev.ultreon.gdx.c.samples;
 
 import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import dev.ultreon.gdx.c.NativeApplication;
+import dev.ultreon.gdx.c.NativeApplicationConfiguration;
 
 import java.io.File;
 
@@ -17,7 +19,9 @@ public class Main implements ApplicationListener {
         System.out.println("Current directory: " + new File(".").getAbsolutePath());
 
         try {
-            NativeApplication app = new NativeApplication(new Main());
+            NativeApplicationConfiguration config = new NativeApplicationConfiguration();
+            config.useVsync(false);
+            NativeApplication app = new NativeApplication(new Main(), config);
         } catch (Throwable t) {
             t.printStackTrace();
             throw t;
@@ -40,7 +44,7 @@ public class Main implements ApplicationListener {
 
     @Override
     public void render() {
-        System.out.println("Rendering...");
+        Gdx.graphics.setTitle("Gdx-C Sample - " + Gdx.graphics.getFramesPerSecond() + " FPS - " + Runtime.getRuntime().freeMemory() / 1024 / 1024 + "MB free - " + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "MB total");
         ScreenUtils.clear(0, 0, 0.2f, 1);
 
         batch.begin();

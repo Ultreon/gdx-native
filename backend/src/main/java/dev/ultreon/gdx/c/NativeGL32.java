@@ -1,6 +1,7 @@
 package dev.ultreon.gdx.c;
 
 import com.badlogic.gdx.graphics.GL32;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import dev.ultreon.gdx.c.opengl.OpenGL;
 import org.teavm.interop.Address;
 import org.teavm.interop.Strings;
@@ -10,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NativeGL32 implements GL32 {
-    private final Map<Integer, Long> managedShaderSources = new HashMap<>();
+    private final Map<Integer, NativePointer> managedShaderSources = new HashMap<>();
 
     public static class AddressUtils {
         public static Address of(Buffer buffer) {
@@ -541,6 +542,11 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteProgramPipelines(int n, IntBuffer pipelines) {
+        for (int i = 0; i < n; i++) {
+            int pipeline = pipelines.get(i);
+            nullCheck(pipeline, i);
+        }
+        
         Address address = AddressUtils.of(pipelines);
         OpenGL.glDeleteProgramPipelines(n, address);
         AddressUtils.put(pipelines, address);
@@ -931,11 +937,18 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteQueries(int n, int[] ids, int offset) {
+        for (int i = 0; i < n; i++) {
+            nullCheck(ids[offset + i], i);
+        }
         OpenGL.glDeleteQueries(n, Address.ofData(ids), offset);
     }
 
     @Override
     public void glDeleteQueries(int n, IntBuffer ids) {
+        for (int i = 0; i < n; i++) {
+            nullCheck(ids.get(n), n);
+        }
+        
         Address address = AddressUtils.of(ids);
         OpenGL.glDeleteQueries(n, address, 0);
         AddressUtils.put(ids, address);
@@ -948,6 +961,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glBeginQuery(int target, int id) {
+        nullCheck(id, 0);
+        
         OpenGL.glBeginQuery(target, id);
     }
 
@@ -958,6 +973,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glGetQueryiv(int target, int pname, IntBuffer params) {
+        nullCheck(params);
+        
         Address address = AddressUtils.of(params);
         OpenGL.glGetQueryiv(target, pname, address);
         AddressUtils.put(params, address);
@@ -965,6 +982,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glGetQueryObjectuiv(int id, int pname, IntBuffer params) {
+        nullCheck(params);
+        
         Address address = AddressUtils.of(params);
         OpenGL.glGetQueryObjectuiv(id, pname, address);
         AddressUtils.put(params, address);
@@ -977,11 +996,14 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public Buffer glGetBufferPointerv(int target, int pname) {
+        System.err.println("glGetBufferPointerv not supported");
         return null; // TODO: implement this
     }
 
     @Override
     public void glDrawBuffers(int n, IntBuffer bufs) {
+        nullCheck(bufs);
+        
         Address address = AddressUtils.of(bufs);
         OpenGL.glDrawBuffers(n, address);
         AddressUtils.put(bufs, address);
@@ -989,6 +1011,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix2x3fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix2x3fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -996,6 +1020,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix3x2fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix3x2fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -1003,6 +1029,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix2x4fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix2x4fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -1010,6 +1038,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix4x2fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix4x2fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -1017,6 +1047,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix3x4fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix3x4fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -1024,6 +1056,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glUniformMatrix4x3fv(int location, int count, boolean transpose, FloatBuffer value) {
+        nullCheck(location);
+        
         Address address = AddressUtils.of(value);
         OpenGL.glUniformMatrix4x3fv(location, count, transpose, address);
         AddressUtils.put(value, address);
@@ -1056,16 +1090,22 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glBindVertexArray(int array) {
+        nullCheck(array);
+
         OpenGL.glBindVertexArray(array);
     }
 
     @Override
     public void glDeleteVertexArrays(int n, int[] arrays, int offset) {
+        nullCheck(arrays);
+
         OpenGL.glDeleteVertexArrays(n, IntBuffer.wrap(arrays, offset, n));
     }
 
     @Override
     public void glDeleteVertexArrays(int n, IntBuffer arrays) {
+        nullCheck(arrays);
+
         OpenGL.glDeleteVertexArrays(n, arrays);
     }
 
@@ -1722,6 +1762,8 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteProgram(int program) {
+        nullCheck(program);
+        
         OpenGL.glDeleteProgram(program);
     }
 
@@ -1739,14 +1781,93 @@ public class NativeGL32 implements GL32 {
 
     @Override
     public void glDeleteShader(int shader) {
+        nullCheck(shader);
+
         OpenGL.glDeleteShader(shader);
-        Long address = managedShaderSources.remove(shader);
-        Address strings = Address.fromLong(address);
+        NativePointer address = managedShaderSources.remove(shader);
+        Address strings = address.address;
         Address source = strings.getAddress();
         Memory.free(source);
-        Memory.free(strings);
     }
 
+    private static void nullCheck(int value) {
+        if (value == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method");
+    }
+
+    private static void nullCheck(int shader, int index) {
+        if (shader == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from array/buffer index " + index);
+    }
+
+    private static void nullCheck(ByteBuffer buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer");
+        
+        for (int i = 0; i < buf.capacity(); i++) {
+            if (buf.get(i) == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer at index " + i);
+        }
+    }
+    
+    private static void nullCheck(byte[] buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from array");
+        
+        for (int i = 0; i < buf.length; i++) {
+            if (buf[i] == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from array at index " + i);
+        }
+    }
+
+    private static void nullCheck(ShortBuffer buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer");
+        
+        for (int i = 0; i < buf.capacity(); i++) {
+            if (buf.get(i) == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer at index " + i);
+        }
+    }
+    
+    private static void nullCheck(short[] buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from array");
+        
+        for (int i = 0; i < buf.length; i++) {
+            if (buf[i] == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from array at index " + i);
+        }
+    }
+
+    private static void nullCheck(IntBuffer buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer");
+        
+        for (int i = 0; i < buf.capacity(); i++) {
+            if (buf.get(i) == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer at index " + i);
+        }
+    }
+    
+    private static void nullCheck(int[] buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from array");
+        
+        for (int i = 0; i < buf.length; i++) {
+            if (buf[i] == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from array at index " + i);
+        }
+    }
+
+    private static void nullCheck(LongBuffer buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer");
+        
+        for (int i = 0; i < buf.capacity(); i++) {
+            if (buf.get(i) == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from buffer at index " + i);
+        }
+    }
+    
+    private static void nullCheck(long[] buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL value passed to OpenGL method from array");
+        
+        for (int i = 0; i < buf.length; i++) {
+            if (buf[i] == 0) throw new GdxRuntimeException("NULL value passed to OpenGL method from array at index " + i);
+        }
+    }
+
+    private static void nullCheck(Address buf) {
+        if (buf == null) throw new GdxRuntimeException("NULL address passed to OpenGL method");
+        long aLong = buf.toLong();
+        if (aLong == 0) throw new GdxRuntimeException("NULL address passed to OpenGL method");
+    }
+    
     @Override
     public void glDetachShader(int program, int shader) {
         OpenGL.glDetachShader(program, shader);
@@ -2049,7 +2170,7 @@ public class NativeGL32 implements GL32 {
     public void glShaderSource(int shader, String string) {
         Address strings = Address.ofData(new byte[Address.sizeOf()]);
         Address source = Strings.toC(string);
-        this.managedShaderSources.put(shader, strings.toLong());
+        this.managedShaderSources.put(shader, new NativePointer(strings));
         strings.putAddress(source);
         IntBuffer len = IntBuffer.allocate(1);
         len.put(0, string.length());
@@ -2329,5 +2450,12 @@ public class NativeGL32 implements GL32 {
     @Override
     public void glVertexAttribPointer(int indx, int size, int type, boolean normalized, int stride, int ptr) {
         OpenGL.glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
+    }
+
+    static final class NativePointer {
+        final Address address;
+        NativePointer(Address address) {
+            this.address = address;
+        }
     }
 }

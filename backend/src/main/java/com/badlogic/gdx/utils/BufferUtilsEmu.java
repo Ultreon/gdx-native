@@ -2,7 +2,11 @@ package com.badlogic.gdx.utils;
 
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import dev.ultreon.gdx.c.NativeGL32;
 import dev.ultreon.gdx.c.gen.Emulate;
+import org.teavm.backend.c.runtime.Memory;
+import org.teavm.classlib.impl.nio.Buffers;
+import org.teavm.interop.Address;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -395,7 +399,7 @@ public final class BufferUtilsEmu {
     }
 
     public static ByteBuffer newUnsafeByteBuffer (int numBytes) {
-        ByteBuffer buffer = newDisposableByteBuffer(numBytes);
+        ByteBuffer buffer = ByteBuffer.allocate(numBytes);
         buffer.order(ByteOrder.nativeOrder());
         allocatedUnsafe += numBytes;
         unsafeBuffers.add(buffer);
@@ -411,7 +415,8 @@ public final class BufferUtilsEmu {
     }
 
     private static void freeMemory (ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+//        Buffers.free(buffer);
+        // Might not be needed
     }
 
     private static int bytesToElements (Buffer dst, int bytes) {

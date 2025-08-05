@@ -506,7 +506,8 @@ public class NativeApplication implements NativeApplicationBase {
         NativeWindow.setSizeLimits(windowHandle, config.windowMinWidth, config.windowMinHeight, config.windowMaxWidth,
                 config.windowMaxHeight);
         if (config.fullscreenMode == null) {
-            if (GLFW.getPlatform() != GLFW.GLFW_PLATFORM_WAYLAND) {
+            // Check for wayland
+            if (System.getenv("WAYLAND_DISPLAY") != null) {
                 if (config.windowX == -1 && config.windowY == -1) { // i.e., center the window
                     int windowWidth = Math.max(config.windowWidth, config.windowMinWidth);
                     int windowHeight = Math.max(config.windowHeight, config.windowMinHeight);

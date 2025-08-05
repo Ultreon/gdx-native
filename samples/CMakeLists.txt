@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 project(gdx-c C)
 
 set(CMAKE_C_STANDARD 17)
@@ -12,6 +12,8 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -std=c17")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -std=c17")
 
 if (WIN32)
+    add_definitions(-DGLEW_STATIC)
+
     include_directories(
             ${CMAKE_SOURCE_DIR}/../external/glfw/include
             ${CMAKE_SOURCE_DIR}/../external/glew-2.1.0/include
@@ -52,7 +54,31 @@ endif ()
 add_definitions()
 add_executable(gdx-c ${CMAKE_SOURCE_DIR}/../external/stb/include/stb_image.h build/generated/teavm/c/glew_include.c)
 
-target_link_libraries(gdx-c glfw3 opengl32 glew32)
+if (WIN32)
+    target_link_libraries(gdx-c
+            glfw3
+            opengl32
+            glew32s
+    )
+elseif (LINUX)
+    target_link_libraries(gdx-c
+            ${GLFW_LIBRARIES}
+            ${GLEW_LIBRARIES}
+            GL
+            m
+            dl
+            pthread
+    )
+elseif (MACOS OR DARWIN OR APPLE)
+    target_link_libraries(gdx-c
+            glfw
+            glew
+            "-framework OpenGL"
+            "-framework Cocoa"
+            "-framework IOKit"
+            "-framework CoreVideo"
+    )
+endif ()
 
 # Copy Asset
 if (WIN32)
@@ -60,11 +86,7 @@ if (WIN32)
             DESTINATION ${CMAKE_BINARY_DIR})
     file(COPY ${CMAKE_SOURCE_DIR}/../external/glfw/lib-vc2022/glfw3.dll
             DESTINATION ${CMAKE_SOURCE_DIR}/build/dist/Release)
-    file(COPY ${CMAKE_SOURCE_DIR}/../external/glew-2.1.0/bin/Release/x64/glew32.dll
-            DESTINATION ${CMAKE_SOURCE_DIR}/build/dist/Release)
     file(COPY ${CMAKE_SOURCE_DIR}/../external/glfw/lib-vc2022/glfw3.dll
-            DESTINATION ${CMAKE_SOURCE_DIR}/build/dist/Debug)
-    file(COPY ${CMAKE_SOURCE_DIR}/../external/glew-2.1.0/bin/Release/x64/glew32.dll
             DESTINATION ${CMAKE_SOURCE_DIR}/build/dist/Debug)
 elseif (LINUX)
     file(COPY ${CMAKE_SOURCE_DIR}/build/generated/teavm/c/assets

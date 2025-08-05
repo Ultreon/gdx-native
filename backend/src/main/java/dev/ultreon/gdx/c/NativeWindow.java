@@ -289,7 +289,8 @@ public class NativeWindow implements Disposable {
      * relative to the first monitor in the virtual surface.
      **/
     public void setPosition(int x, int y) {
-        if (getPlatform() == GLFW_PLATFORM_WAYLAND) return;
+        // Check for wayland
+        if (System.getenv("WAYLAND_DISPLAY") != null) return;
         setWindowPos(windowHandle, x, y);
     }
 

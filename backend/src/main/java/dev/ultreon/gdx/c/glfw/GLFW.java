@@ -578,9 +578,6 @@ public class GLFW {
     @Import(name = "glfwSetWindowAttrib")
     private static native void glfwSetWindowAttrib(Address window, int attrib, int value);
 
-    @Import(name = "glfwGetPlatform")
-    private static native int glfwGetPlatform();
-
     @Import(name = "glfwPollEventsTimeout")
     private static native void glfwPollEventsTimeout(double timeout);
 
@@ -1086,7 +1083,4 @@ public class GLFW {
         glfwSetErrorCallback(glfwErrorCallback);
     }
 
-    public static int getPlatform() {
-        return glfwGetPlatform();
-    }
 }
